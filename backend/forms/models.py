@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.utils import timezone
+from .managers import UserManager
 
 class User(AbstractUser):
     """
@@ -12,6 +13,8 @@ class User(AbstractUser):
         ('staff', 'Staff'),
     ]
     role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='staff')
+
+    objects = UserManager()
     
     def __str__(self):
         return f"{self.username} ({self.role})"
