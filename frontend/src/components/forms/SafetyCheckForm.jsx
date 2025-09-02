@@ -61,16 +61,16 @@ const SafetyCheckForm = () => {
   };
 
   return (
-    <div className="max-w-2xl mx-auto p-6">
-      <div className="card">
+    <div className="max-w-2xl mx-auto">
+      <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
         <div className="flex items-center mb-6">
-          <span className="text-2xl mr-3">Ìª°Ô∏è</span>
+          <span className="text-2xl mr-3">üõ°Ô∏è</span>
           <h3 className="text-2xl font-bold text-gray-900">Daily Safety Inspection</h3>
         </div>
         
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label className="form-label" htmlFor="trampoline_id">
+            <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="trampoline_id">
               Trampoline ID
             </label>
             <input
@@ -80,7 +80,7 @@ const SafetyCheckForm = () => {
               placeholder="e.g., TRAMP-001"
               value={formData.trampoline_id}
               onChange={handleChange}
-              className="form-input"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               required
               disabled={isSubmitting}
             />
@@ -97,7 +97,7 @@ const SafetyCheckForm = () => {
                   checked={formData.springs_ok}
                   onChange={handleChange}
                   disabled={isSubmitting}
-                  className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                 />
                 <span className="ml-3 text-sm text-gray-700">Springs in good condition</span>
               </label>
@@ -109,7 +109,7 @@ const SafetyCheckForm = () => {
                   checked={formData.nets_ok}
                   onChange={handleChange}
                   disabled={isSubmitting}
-                  className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                 />
                 <span className="ml-3 text-sm text-gray-700">Safety nets intact and secure</span>
               </label>
@@ -121,7 +121,7 @@ const SafetyCheckForm = () => {
                   checked={formData.foam_pits_ok}
                   onChange={handleChange}
                   disabled={isSubmitting}
-                  className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                 />
                 <span className="ml-3 text-sm text-gray-700">Foam pits properly maintained</span>
               </label>
@@ -133,7 +133,7 @@ const SafetyCheckForm = () => {
                   checked={formData.overall_pass}
                   onChange={handleChange}
                   disabled={isSubmitting}
-                  className="h-4 w-4 text-success-600 focus:ring-success-500 border-gray-300 rounded"
+                  className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
                 />
                 <span className="ml-3 text-sm font-semibold text-gray-900">Overall safety check passed</span>
               </label>
@@ -141,7 +141,7 @@ const SafetyCheckForm = () => {
           </div>
           
           <div>
-            <label className="form-label" htmlFor="notes">
+            <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="notes">
               Additional Notes
             </label>
             <textarea
@@ -151,17 +151,17 @@ const SafetyCheckForm = () => {
               placeholder="Any additional observations or concerns..."
               value={formData.notes}
               onChange={handleChange}
-              className="form-input resize-vertical"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-vertical"
               disabled={isSubmitting}
             />
           </div>
           
           <button
             type="submit"
-            className={`w-full btn ${
+            className={`w-full py-2 px-4 rounded-lg font-medium ${
               isSubmitting 
                 ? 'bg-gray-400 cursor-not-allowed' 
-                : 'btn-success'
+                : 'bg-green-600 hover:bg-green-700 text-white'
             }`}
             disabled={isSubmitting}
           >
@@ -178,8 +178,8 @@ const SafetyCheckForm = () => {
           {message.text && (
             <div className={`px-4 py-3 rounded-lg ${
               message.type === 'success' 
-                ? 'bg-success-50 border border-success-200 text-success-700'
-                : 'bg-danger-50 border border-danger-200 text-danger-700'
+                ? 'bg-green-50 border border-green-200 text-green-700'
+                : 'bg-red-50 border border-red-200 text-red-700'
             }`}>
               {message.text}
             </div>

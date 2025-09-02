@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import apiService from '../../services/api';
+import { useNavigate } from 'react-router-dom';
 
 const Login = ({ onLogin, onError }) => {
   const [formData, setFormData] = useState({
@@ -8,6 +9,7 @@ const Login = ({ onLogin, onError }) => {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -26,7 +28,19 @@ const Login = ({ onLogin, onError }) => {
 
     try {
       const response = await apiService.login(formData.username, formData.password);
-      onLogin(response.token, response.user);
+
+      // store first
+    localStorage.setItem('authToken', response.token);
+    localStorage.setItem('user', JSON.stringify(response.user));
+
+    // then update app state
+    onLogin(response.token, response.user);
+
+      if (response.user.role === 'owner') {
+        navigate('/admin/dashboard');
+      } else {
+        navigate('.components/EmployeeDashboard/EmployeeDashboard');
+      }
     } catch (err) {
       setError(err.message || 'Login failed. Please check your credentials.');
       onError && onError(err);
@@ -41,7 +55,7 @@ const Login = ({ onLogin, onError }) => {
         <div className="card">
           <div className="text-center mb-8">
             <h2 className="text-3xl font-bold text-gray-900">Jump 'n Joy</h2>
-            <p className="mt-2 text-gray-600">Staff Management System</p>
+            <p className="mt-2 text-gray-600">Forms Management System</p>
           </div>
           
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -68,7 +82,7 @@ const Login = ({ onLogin, onError }) => {
               </label>
               <input
                 id="password"
-                type="password"
+                type="text"
                 name="password"
                 value={formData.password}
                 onChange={handleChange}
@@ -104,13 +118,13 @@ const Login = ({ onLogin, onError }) => {
               </div>
             )}
             
-            <div className="mt-6 p-4 bg-gray-50 rounded-lg text-sm text-gray-600">
+            {/* <div className="mt-6 p-4 bg-gray-50 rounded-lg text-sm text-gray-600">
               <h4 className="font-semibold mb-2">Demo Accounts:</h4>
               <div className="space-y-1">
                 <p><span className="font-mono bg-white px-2 py-1 rounded">owner</span> / <span className="font-mono bg-white px-2 py-1 rounded">password123</span></p>
                 <p><span className="font-mono bg-white px-2 py-1 rounded">staff1</span> / <span className="font-mono bg-white px-2 py-1 rounded">password123</span></p>
               </div>
-            </div>
+            </div> */}
           </form>
         </div>
       </div>

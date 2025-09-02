@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django.utils.html import format_html
-from .models import User, SafetyCheck, IncidentReport, StaffShift, CleaningLog, MaintenanceLog, DailyStats
+from .models import User, SafetyCheck, IncidentReport, StaffShift, CleaningLog, MaintenanceLog, DailyStats, StaffAppraisal
 
 @admin.register(User)
 class CustomUserAdmin(UserAdmin):
@@ -35,22 +35,74 @@ class SafetyCheckAdmin(admin.ModelAdmin):
             return qs.filter(checked_by=request.user)
         return qs
 
+
 @admin.register(IncidentReport)
 class IncidentReportAdmin(admin.ModelAdmin):
     """
-    Incident Report admin interface
+    Accident/Incident Report admin interface
     """
-    list_display = ('incident_type', 'date', 'location', 'reported_by', 'created_at')
-    list_filter = ('incident_type', 'date', 'reported_by')
-    search_fields = ('description', 'location', 'injured_person')
-    date_hierarchy = 'date'
+    list_display = (
+        'first_name', 'surname', 'date_of_accident', 'time_of_accident',
+        'location', 'reported_by', 'created_at', 'riddor_reportable'
+    )
+    list_filter = (
+        'date_of_accident',
+        'gender',
+        'ambulance_called',
+        'riddor_reportable',
+        'reported_by',
+    )
+    search_fields = (
+        'first_name', 'surname', 'location', 'how_occurred',
+        'injury_details', 'treatment_given', 'first_aider_name'
+    )
+    date_hierarchy = 'date_of_accident'
     readonly_fields = ('created_at',)
-    
+
+    fieldsets = (
+        ('Injured Person Details', {
+            'fields': (
+                'first_name', 'surname', 'date_of_birth', 'gender',
+                'address', 'postcode', 'phone_home', 'phone_mobile',
+                'consent_to_treatment', 'refusal_of_treatment', 'guardian_name',
+            )
+        }),
+        ('Accident Details', {
+            'fields': (
+                'date_of_accident', 'time_of_accident', 'location',
+                'how_occurred', 'injury_details', 'injury_location',
+            )
+        }),
+        ('Treatment / Advice', {
+            'fields': (
+                'treatment_given', 'hospital', 'time_departure', 'destination',
+                'ambulance_called', 'ambulance_time_called', 'ambulance_caller',
+                'ambulance_time_arrived', 'continued_activities_time',
+            )
+        }),
+        ('First Aider', {
+            'fields': (
+                'first_aider_name', 'first_aider_signature',
+                'first_aider_date', 'first_aider_time',
+            )
+        }),
+        ('RIDDOR Reporting', {
+            'fields': (
+                'riddor_reportable', 'riddor_report_method',
+                'riddor_reported_by', 'riddor_date_reported',
+            )
+        }),
+        ('Meta', {
+            'fields': ('reported_by', 'created_at'),
+        }),
+    )
+
     def get_queryset(self, request):
         qs = super().get_queryset(request)
         if hasattr(request.user, 'role') and request.user.role == 'staff':
             return qs.filter(reported_by=request.user)
         return qs
+
 
 @admin.register(StaffShift)
 class StaffShiftAdmin(admin.ModelAdmin):
@@ -110,3 +162,45 @@ class DailyStatsAdmin(admin.ModelAdmin):
         if obj:  # Editing existing record
             return self.readonly_fields + ('date',)
         return self.readonly_fields
+
+@admin.register(StaffAppraisal)
+class StaffAppraisalAdmin(admin.ModelAdmin):
+    """
+    Admin interface for Staff Appraisal
+    """
+    list_display = ('employee', 'appraiser', 'date_of_appraisal', 'created_at')
+    list_filter = ('date_of_appraisal', 'appraiser')
+    search_fields = ('employee__username', 'employee__first_name', 'employee__last_name', 'achievements', 'goals')
+    date_hierarchy = 'date_of_appraisal'
+    readonly_fields = ('created_at',)
+
+    fieldsets = (
+        ('Employee Info', {
+            'fields': ('employee', 'appraiser', 'date_of_appraisal')
+        }),
+        ('Job Performance', {
+            'fields': (
+                ('attendance_rating', 'attendance_comments'),
+                ('quality_rating', 'quality_comments'),
+                ('teamwork_rating', 'teamwork_comments'),
+                ('initiative_rating', 'initiative_comments'),
+                ('customer_service_rating', 'customer_service_comments'),
+                ('adherence_rating', 'adherence_comments'),
+            )
+        }),
+        ('Achievements', {
+            'fields': ('achievements',)
+        }),
+        ('Development Needs', {
+            'fields': ('development_needs',)
+        }),
+        ('Goals', {
+            'fields': ('goals',)
+        }),
+        ('Employee Comments', {
+            'fields': ('employee_comments',)
+        }),
+        ('Meta', {
+            'fields': ('created_at',)
+        }),
+    )

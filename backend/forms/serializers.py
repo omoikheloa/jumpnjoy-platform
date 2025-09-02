@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth import authenticate
-from .models import User, SafetyCheck, IncidentReport, StaffShift, CleaningLog, MaintenanceLog, DailyStats
+from .models import User, SafetyCheck, IncidentReport, StaffShift, CleaningLog, MaintenanceLog, DailyStats, StaffAppraisal, CafeChecklist
 
 class UserSerializer(serializers.ModelSerializer):
     """
@@ -155,3 +155,17 @@ class DailyStatsSerializer(serializers.ModelSerializer):
         if value < 0:
             raise serializers.ValidationError("Sales amount cannot be negative")
         return value
+
+class StaffAppraisalSerializer(serializers.ModelSerializer):
+    employee_info = UserSerializer(source="employee", read_only=True)
+    appraiser_info = UserSerializer(source="appraiser", read_only=True)
+
+    class Meta:
+        model = StaffAppraisal
+        fields = "__all__"
+        read_only_fields = ("id", "created_at")
+
+class CafeChecklistSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CafeChecklist
+        fields = "__all__"

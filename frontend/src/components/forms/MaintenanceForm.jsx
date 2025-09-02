@@ -47,17 +47,16 @@ const MaintenanceForm = () => {
   };
 
   return (
-    <div className="max-w-2xl mx-auto p-6">
-      <div className="card">
+    <div className="max-w-2xl mx-auto">
+      <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
         <div className="flex items-center mb-6">
-          <span className="text-2xl mr-3">í´§</span>
+          <span className="text-2xl mr-3">ðŸ”§</span>
           <h3 className="text-2xl font-bold text-gray-900">Maintenance Log</h3>
         </div>
         
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Equipment ID */}
           <div>
-            <label className="form-label" htmlFor="equipment_id">
+            <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="equipment_id">
               Equipment ID *
             </label>
             <input
@@ -67,15 +66,14 @@ const MaintenanceForm = () => {
               placeholder="e.g., TRAMP-001, PUMP-02"
               value={formData.equipment_id}
               onChange={handleChange}
-              className="form-input"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               required
               disabled={isSubmitting}
             />
           </div>
           
-          {/* Maintenance Type */}
           <div>
-            <label className="form-label" htmlFor="maintenance_type">
+            <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="maintenance_type">
               Maintenance Type *
             </label>
             <select
@@ -83,7 +81,7 @@ const MaintenanceForm = () => {
               name="maintenance_type"
               value={formData.maintenance_type}
               onChange={handleChange}
-              className="form-input"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               required
               disabled={isSubmitting}
             >
@@ -94,9 +92,8 @@ const MaintenanceForm = () => {
             </select>
           </div>
           
-          {/* Description */}
           <div>
-            <label className="form-label" htmlFor="description">
+            <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="description">
               Description *
             </label>
             <textarea
@@ -106,15 +103,14 @@ const MaintenanceForm = () => {
               placeholder="Describe the maintenance work performed..."
               value={formData.description}
               onChange={handleChange}
-              className="form-input resize-vertical"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-vertical"
               required
               disabled={isSubmitting}
             ></textarea>
           </div>
 
-          {/* Parts Replaced */}
           <div>
-            <label className="form-label" htmlFor="parts_replaced">
+            <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="parts_replaced">
               Parts Replaced
             </label>
             <input
@@ -124,14 +120,13 @@ const MaintenanceForm = () => {
               placeholder="e.g., filter, pump belt"
               value={formData.parts_replaced}
               onChange={handleChange}
-              className="form-input"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               disabled={isSubmitting}
             />
           </div>
 
-          {/* Cost */}
           <div>
-            <label className="form-label" htmlFor="cost">
+            <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="cost">
               Cost (â‚¦)
             </label>
             <input
@@ -141,16 +136,15 @@ const MaintenanceForm = () => {
               placeholder="Enter cost in Naira"
               value={formData.cost}
               onChange={handleChange}
-              className="form-input"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               min="0"
               step="0.01"
               disabled={isSubmitting}
             />
           </div>
 
-          {/* Next Maintenance Date */}
           <div>
-            <label className="form-label" htmlFor="next_maintenance_date">
+            <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="next_maintenance_date">
               Next Maintenance Date
             </label>
             <input
@@ -159,29 +153,23 @@ const MaintenanceForm = () => {
               name="next_maintenance_date"
               value={formData.next_maintenance_date}
               onChange={handleChange}
-              className="form-input"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               disabled={isSubmitting}
             />
           </div>
 
-          {/* Submit Button */}
           <div className="flex justify-end">
             <button
               type="submit"
-              className={`btn btn-primary ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
+              className={`bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
               disabled={isSubmitting}
             >
               {isSubmitting ? 'Submitting...' : 'Submit Maintenance Log'}
             </button>
           </div>
 
-          {/* Message */}
           {message.text && (
-            <p
-              className={`mt-4 text-sm ${
-                message.type === 'success' ? 'text-green-600' : 'text-red-600'
-              }`}
-            >
+            <p className={`mt-4 text-sm ${message.type === 'success' ? 'text-green-600' : 'text-red-600'}`}>
               {message.text}
             </p>
           )}

@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.utils import timezone
 from .managers import UserManager
+from django.conf import settings
 
 class User(AbstractUser):
     """
@@ -44,31 +45,75 @@ class SafetyCheck(models.Model):
 
 class IncidentReport(models.Model):
     """
-    Incident and accident reporting model
-    Legal requirement for tracking incidents
+    Accident and incident reporting model
+    Based on JUMP N JOY Accident Report Form
     """
-    INCIDENT_TYPES = [
-        ('injury', 'Injury'),
-        ('equipment_fault', 'Equipment Fault'),
-        ('other', 'Other'),
+    GENDER_CHOICES = [
+        ('M', 'Male'),
+        ('F', 'Female'),
     ]
-    
-    date = models.DateTimeField(default=timezone.now)
-    incident_type = models.CharField(max_length=20, choices=INCIDENT_TYPES)
-    description = models.TextField(help_text="Detailed description of incident")
-    location = models.CharField(max_length=100, help_text="Where incident occurred")
-    injured_person = models.CharField(max_length=100, blank=True, help_text="Name of injured person if applicable")
-    action_taken = models.TextField(help_text="Actions taken in response")
+
+    # Injured Person Details
+    first_name = models.CharField(max_length=100)
+    surname = models.CharField(max_length=100)
+    date_of_birth = models.DateField(null=True, blank=True)
+    gender = models.CharField(max_length=1, choices=GENDER_CHOICES, blank=True)
+    address = models.CharField(max_length=255, blank=True)
+    postcode = models.CharField(max_length=20, blank=True)
+    phone_home = models.CharField(max_length=20, blank=True)
+    phone_mobile = models.CharField(max_length=20, blank=True)
+
+    consent_to_treatment = models.BooleanField(default=False)
+    refusal_of_treatment = models.BooleanField(default=False)
+    guardian_name = models.CharField(max_length=100, blank=True)
+
+    # Accident Details
+    date_of_accident = models.DateField()
+    time_of_accident = models.TimeField()
+    location = models.CharField(max_length=255)
+    how_occurred = models.TextField()
+    injury_details = models.TextField(blank=True)
+    injury_location = models.CharField(max_length=255, blank=True)
+
+    # Treatment
+    treatment_given = models.TextField(blank=True)
+    hospital = models.CharField(max_length=255, blank=True)
+    time_departure = models.TimeField(null=True, blank=True)
+    destination = models.CharField(max_length=255, blank=True)
+    ambulance_called = models.BooleanField(default=False)
+    ambulance_time_called = models.TimeField(null=True, blank=True)
+    ambulance_caller = models.CharField(max_length=100, blank=True)
+    ambulance_time_arrived = models.TimeField(null=True, blank=True)
+
+    continued_activities_time = models.TimeField(null=True, blank=True)
+
+    # First Aider
+    first_aider_name = models.CharField(max_length=100, blank=True)
+    first_aider_signature = models.ImageField(
+        upload_to="signatures/",
+        blank=True,
+        null=True,
+        help_text="Digital signature of the first aider"
+    )
+    first_aider_date = models.DateField(null=True, blank=True)
+    first_aider_time = models.TimeField(null=True, blank=True)
+
+    # RIDDOR Section
+    riddor_reportable = models.BooleanField(default=False)
+    riddor_report_method = models.CharField(max_length=255, blank=True)
+    riddor_reported_by = models.CharField(max_length=100, blank=True)
+    riddor_date_reported = models.DateField(null=True, blank=True)
+
     reported_by = models.ForeignKey(User, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        ordering = ['-date']
-        verbose_name = "Incident Report"
-        verbose_name_plural = "Incident Reports"
+        ordering = ['-date_of_accident']
+        verbose_name = "Accident Report"
+        verbose_name_plural = "Accident Reports"
 
     def __str__(self):
-        return f"Incident - {self.incident_type} - {self.date.strftime('%Y-%m-%d %H:%M')}"
+        return f"Accident - {self.first_name} {self.surname} - {self.date_of_accident}"
 
 class StaffShift(models.Model):
     """
@@ -167,3 +212,92 @@ class DailyStats(models.Model):
 
     def __str__(self):
         return f"Stats - {self.date} - {self.visitor_count} visitors - £{self.cafe_sales}"
+    
+
+class CafeChecklist(models.Model):
+    CHECKLIST_TYPES = [
+        ('opening', 'Opening Checklist'),
+        ('midday', 'Midday Operations'),
+        ('closing', 'Closing Checklist'),
+    ]
+    
+    date = models.DateField()
+    checklist_type = models.CharField(max_length=50, choices=CHECKLIST_TYPES, null=True, blank=True)
+    item_id = models.CharField(max_length=100, null=True, blank=True)
+    item_name = models.CharField(max_length=255, null=True, blank=True)
+    completed = models.BooleanField(default=False, null=True, blank=True)
+    
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="checklist_creators"
+    )
+    updated_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="checklist_updates"
+    )
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        # Prevent duplicate entries for same item on same date
+        unique_together = ['date', 'checklist_type', 'item_id']
+        ordering = ['checklist_type', 'item_id']
+        
+    def __str__(self):
+        return f"{self.checklist_type} - {self.item_name} - {self.date}"
+    
+class StaffAppraisal(models.Model):
+    """
+    Staff Appraisal model based on appraisal form
+    """
+
+    RATING_CHOICES = [(i, str(i)) for i in range(1, 6)]  # 1 to 5 scale
+
+    # Meta
+    employee = models.ForeignKey(User, on_delete=models.CASCADE, related_name="appraisals")
+    appraiser = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name="given_appraisals")
+    date_of_appraisal = models.DateField()
+
+    # Section 1: Job Performance
+    attendance_rating = models.IntegerField(choices=RATING_CHOICES)
+    attendance_comments = models.TextField(blank=True)
+
+    quality_rating = models.IntegerField(choices=RATING_CHOICES)
+    quality_comments = models.TextField(blank=True)
+
+    teamwork_rating = models.IntegerField(choices=RATING_CHOICES)
+    teamwork_comments = models.TextField(blank=True)
+
+    initiative_rating = models.IntegerField(choices=RATING_CHOICES)
+    initiative_comments = models.TextField(blank=True)
+
+    customer_service_rating = models.IntegerField(choices=RATING_CHOICES)
+    customer_service_comments = models.TextField(blank=True)
+
+    adherence_rating = models.IntegerField(choices=RATING_CHOICES)
+    adherence_comments = models.TextField(blank=True)
+
+    # Section 2: Achievements
+    achievements = models.TextField(blank=True)
+
+    # Section 3: Development
+    development_needs = models.TextField(blank=True)
+
+    # Section 4: Goals
+    goals = models.TextField(blank=True)
+
+    # Comments
+    employee_comments = models.TextField(blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-date_of_appraisal']
+        verbose_name = "Staff Appraisal"
+        verbose_name_plural = "Staff Appraisals"
+
+    def __str__(self):
+        return f"Appraisal - {self.employee.username} ({self.date_of_appraisal})"
