@@ -3,6 +3,9 @@ from django.contrib.auth.models import AbstractUser
 from django.utils import timezone
 from .managers import UserManager
 from django.conf import settings
+from django.db.models import Avg, Sum, Count
+from datetime import datetime, timedelta
+from decimal import Decimal
 
 class User(AbstractUser):
     """
@@ -14,16 +17,186 @@ class User(AbstractUser):
         ('staff', 'Staff'),
     ]
     role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='staff')
+    phone = models.CharField(max_length=20, blank=True)
+    hire_date = models.DateField(null=True, blank=True)
+    is_active_employee = models.BooleanField(default=True)
 
     objects = UserManager()
     
     def __str__(self):
         return f"{self.username} ({self.role})"
 
+class DailyInspection(models.Model):
+    """
+    Comprehensive daily safety inspection model
+    Mirrors the PDF inspection report format
+    """
+    INSPECTION_DAY_CHOICES = [
+        ('SAT', 'Saturday'),
+        ('SUN', 'Sunday'),
+        ('MON', 'Monday'),
+        ('TUE', 'Tuesday'),
+        ('WED', 'Wednesday'),
+        ('THU', 'Thursday'),
+        ('FRI', 'Friday'),
+    ]
+    
+    STATUS_CHOICES = [
+        ('pass', 'Pass'),
+        ('fail', 'Fail'),
+        ('remedial', 'Remedial'),
+    ]
+    
+    # Basic information
+    date = models.DateField(default=timezone.now)
+    wc_number = models.CharField(max_length=50, blank=True, help_text="WC number from the form")
+    inspector_initials = models.CharField(max_length=5, help_text="Inspector initials")
+    manager_initials = models.CharField(max_length=5, help_text="Manager initials for sign-off")
+    
+    # Individual inspection items - following the PDF format
+    framework_stability = models.CharField(max_length=8, choices=STATUS_CHOICES, default='pass', help_text="INS001: Framework Stability & Security")
+    perimeter_netting = models.CharField(max_length=8, choices=STATUS_CHOICES, default='pass', help_text="INS002: Perimeter Netting")
+    wall_padding = models.CharField(max_length=8, choices=STATUS_CHOICES, default='pass', help_text="INS003: Protective Wall Padding")
+    walkway_padding = models.CharField(max_length=8, choices=STATUS_CHOICES, default='pass', help_text="INS004: Protective Walkway Padding")
+    coverall_pads = models.CharField(max_length=8, choices=STATUS_CHOICES, default='pass', help_text="INS005: Coverall Pads")
+    trampoline_beds = models.CharField(max_length=8, choices=STATUS_CHOICES, default='pass', help_text="INS006: Trampoline Beds")
+    safety_netting = models.CharField(max_length=8, choices=STATUS_CHOICES, default='pass', help_text="INS007: Trampoline Safety Netting")
+    trampoline_springs = models.CharField(max_length=8, choices=STATUS_CHOICES, default='pass', help_text="INS008: Trampoline Springs")
+    fire_doors = models.CharField(max_length=8, choices=STATUS_CHOICES, default='pass', help_text="INS009: Fire Doors Functioning & Routes Clear")
+    fire_equipment = models.CharField(max_length=8, choices=STATUS_CHOICES, default='pass', help_text="INS010: Fire Extinguishing Equipment In Place")
+    electrical_cables = models.CharField(max_length=8, choices=STATUS_CHOICES, default='pass', help_text="INS011: Electrical Cables Safely Routed")
+    electrical_sockets = models.CharField(max_length=8, choices=STATUS_CHOICES, default='pass', help_text="INS012: Electrical plugs and sockets in good condition")
+    first_aid_box = models.CharField(max_length=8, choices=STATUS_CHOICES, default='pass', help_text="INS013: First-aid box fully stocked")
+    signage = models.CharField(max_length=8, choices=STATUS_CHOICES, default='pass', help_text="INS014: Signage in place and visible")
+    area_cleanliness = models.CharField(max_length=8, choices=STATUS_CHOICES, default='pass', help_text="INS015: Area clean and ready for use")
+    gates_locks = models.CharField(max_length=8, choices=STATUS_CHOICES, default='pass', help_text="INS016: Gates, closing and locking devices operational")
+    trip_hazards = models.CharField(max_length=8, choices=STATUS_CHOICES, default='pass', help_text="INS017: Area free of trip/slip hazards")
+    staff_availability = models.CharField(max_length=8, choices=STATUS_CHOICES, default='pass', help_text="INS018: Minimum required staff available")
+    
+    # Metadata
+    checked_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='daily_inspections')
+    signed_off_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='signed_inspections', null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-date', '-created_at']
+        verbose_name = "Daily Inspection"
+        verbose_name_plural = "Daily Inspections"
+
+    def __str__(self):
+        return f"Daily Inspection - {self.inspection_day} - {self.date}"
+
+    @property
+    def overall_pass(self):
+        """Calculate overall pass status based on individual items"""
+        inspection_fields = [
+            self.framework_stability, self.perimeter_netting, self.wall_padding,
+            self.walkway_padding, self.coverall_pads, self.trampoline_beds,
+            self.safety_netting, self.trampoline_springs, self.fire_doors,
+            self.fire_equipment, self.electrical_cables, self.electrical_sockets,
+            self.first_aid_box, self.signage, self.area_cleanliness,
+            self.gates_locks, self.trip_hazards, self.staff_availability
+        ]
+        return all(status == 'pass' for status in inspection_fields)
+
+    @property
+    def failed_items_count(self):
+        """Count of failed inspection items"""
+        inspection_fields = [
+            self.framework_stability, self.perimeter_netting, self.wall_padding,
+            self.walkway_padding, self.coverall_pads, self.trampoline_beds,
+            self.safety_netting, self.trampoline_springs, self.fire_doors,
+            self.fire_equipment, self.electrical_cables, self.electrical_sockets,
+            self.first_aid_box, self.signage, self.area_cleanliness,
+            self.gates_locks, self.trip_hazards, self.staff_availability
+        ]
+        return sum(1 for status in inspection_fields if status == 'fail')
+
+    @property
+    def remedial_items_count(self):
+        """Count of remedial inspection items"""
+        inspection_fields = [
+            self.framework_stability, self.perimeter_netting, self.wall_padding,
+            self.walkway_padding, self.coverall_pads, self.trampoline_beds,
+            self.safety_netting, self.trampoline_springs, self.fire_doors,
+            self.fire_equipment, self.electrical_cables, self.electrical_sockets,
+            self.first_aid_box, self.signage, self.area_cleanliness,
+            self.gates_locks, self.trip_hazards, self.staff_availability
+        ]
+        return sum(1 for status in inspection_fields if status == 'remedial')
+
+    def get_failed_items(self):
+        """Return list of failed inspection items with their codes"""
+        item_mapping = {
+            'framework_stability': 'INS001',
+            'perimeter_netting': 'INS002',
+            'wall_padding': 'INS003',
+            'walkway_padding': 'INS004',
+            'coverall_pads': 'INS005',
+            'trampoline_beds': 'INS006',
+            'safety_netting': 'INS007',
+            'trampoline_springs': 'INS008',
+            'fire_doors': 'INS009',
+            'fire_equipment': 'INS010',
+            'electrical_cables': 'INS011',
+            'electrical_sockets': 'INS012',
+            'first_aid_box': 'INS013',
+            'signage': 'INS014',
+            'area_cleanliness': 'INS015',
+            'gates_locks': 'INS016',
+            'trip_hazards': 'INS017',
+            'staff_availability': 'INS018',
+        }
+        
+        failed_items = []
+        for field_name, code in item_mapping.items():
+            if getattr(self, field_name) == 'fail':
+                failed_items.append((code, field_name))
+        return failed_items
+
+
+class RemedialAction(models.Model):
+    """
+    Tracks remedial actions for failed or flagged inspection items
+    """
+    inspection = models.ForeignKey(DailyInspection, on_delete=models.CASCADE, related_name='remedial_actions')
+    inspection_code = models.CharField(max_length=6, help_text="Inspection code (e.g., INS001)")
+    issue_description = models.TextField(help_text="Description of the issue found")
+    remedial_action = models.TextField(help_text="Action taken or required")
+    
+    # Status tracking
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('in_progress', 'In Progress'),
+        ('completed', 'Completed'),
+        ('escalated', 'Escalated'),
+    ]
+    status = models.CharField(max_length=12, choices=STATUS_CHOICES, default='pending')
+    
+    # Personnel
+    reported_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reported_remedial_actions')
+    assigned_to = models.ForeignKey(User, on_delete=models.CASCADE, related_name='assigned_remedial_actions', null=True, blank=True)
+    completed_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='completed_remedial_actions', null=True, blank=True)
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    due_date = models.DateTimeField(null=True, blank=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = "Remedial Action"
+        verbose_name_plural = "Remedial Actions"
+
+    def __str__(self):
+        return f"Remedial Action - {self.inspection_code} - {self.inspection.date}"
+
+
+# Keep the simplified SafetyCheck model for backward compatibility if needed
 class SafetyCheck(models.Model):
     """
-    Daily safety inspection model
-    Tracks equipment condition and safety compliance
+    Simplified safety inspection model (kept for backward compatibility)
     """
     date = models.DateField(default=timezone.now)
     trampoline_id = models.CharField(max_length=50, help_text="Trampoline identifier")
@@ -201,6 +374,10 @@ class DailyStats(models.Model):
     date = models.DateField(unique=True, default=timezone.now, help_text="Date for statistics")
     visitor_count = models.IntegerField(default=0, help_text="Total visitors for the day")
     cafe_sales = models.DecimalField(max_digits=10, decimal_places=2, default=0, help_text="Cafe sales amount")
+    total_revenue = models.DecimalField(max_digits=10, decimal_places=2, default=0, help_text="Total daily revenue")
+    bounce_time_minutes = models.IntegerField(default=0, help_text="Total bounce time in minutes")
+    peak_hour_start = models.TimeField(null=True, blank=True, help_text="Peak hour start time")
+    peak_hour_end = models.TimeField(null=True, blank=True, help_text="Peak hour end time")
     notes = models.TextField(blank=True, help_text="Daily notes or observations")
     recorded_by = models.ForeignKey(User, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -213,6 +390,35 @@ class DailyStats(models.Model):
     def __str__(self):
         return f"Stats - {self.date} - {self.visitor_count} visitors - £{self.cafe_sales}"
     
+    @classmethod
+    def get_monthly_revenue(cls, month=None, year=None):
+        """Calculate monthly revenue"""
+        if not month:
+            month = timezone.now().month
+        if not year:
+            year = timezone.now().year
+            
+        return cls.objects.filter(
+            date__month=month,
+            date__year=year
+        ).aggregate(
+            total=Sum('total_revenue')
+        )['total'] or Decimal('0')
+
+    @classmethod
+    def get_monthly_visitors(cls, month=None, year=None):
+        """Calculate monthly visitors"""
+        if not month:
+            month = timezone.now().month
+        if not year:
+            year = timezone.now().year
+            
+        return cls.objects.filter(
+            date__month=month,
+            date__year=year
+        ).aggregate(
+            total=Sum('visitor_count')
+        )['total'] or 0
 
 class CafeChecklist(models.Model):
     CHECKLIST_TYPES = [
@@ -301,3 +507,67 @@ class StaffAppraisal(models.Model):
 
     def __str__(self):
         return f"Appraisal - {self.employee.username} ({self.date_of_appraisal})"
+
+    def get_average_rating(self):
+        """Calculate average rating across all categories"""
+        ratings = [
+            self.attendance_rating,
+            self.quality_rating,
+            self.teamwork_rating,
+            self.initiative_rating,
+            self.customer_service_rating,
+            self.adherence_rating
+        ]
+        return sum(ratings) / len(ratings)
+
+class CustomerSatisfactionSurvey(models.Model):
+    """
+    Customer satisfaction surveys for analytics
+    """
+    date = models.DateTimeField(auto_now_add=True)
+    overall_rating = models.IntegerField(choices=[(i, str(i)) for i in range(1, 6)])
+    cleanliness_rating = models.IntegerField(choices=[(i, str(i)) for i in range(1, 6)])
+    staff_rating = models.IntegerField(choices=[(i, str(i)) for i in range(1, 6)])
+    facilities_rating = models.IntegerField(choices=[(i, str(i)) for i in range(1, 6)])
+    value_rating = models.IntegerField(choices=[(i, str(i)) for i in range(1, 6)])
+    comments = models.TextField(blank=True)
+    would_recommend = models.BooleanField()
+    
+    class Meta:
+        ordering = ['-date']
+        
+    def __str__(self):
+        return f"Survey - {self.date.strftime('%Y-%m-%d')} - Rating: {self.overall_rating}"
+
+class BusinessTarget(models.Model):
+    """
+    Business targets for analytics tracking
+    """
+    TARGET_TYPES = [
+        ('revenue', 'Monthly Revenue'),
+        ('visitors', 'Monthly Visitors'),
+        ('satisfaction', 'Customer Satisfaction'),
+        ('incidents', 'Safety Incidents'),
+    ]
+    
+    target_type = models.CharField(max_length=20, choices=TARGET_TYPES)
+    target_value = models.DecimalField(max_digits=10, decimal_places=2)
+    month = models.IntegerField()
+    year = models.IntegerField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        unique_together = ['target_type', 'month', 'year']
+        
+    def __str__(self):
+        return f"{self.get_target_type_display()} - {self.month}/{self.year} - Target: {self.target_value}"
+    
+
+class Waiver(models.Model):
+    full_name = models.CharField(max_length=255)
+    signature = models.TextField()  # store base64 signature if needed
+    pdf_file = models.FileField(upload_to="waivers/", null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Waiver for {self.full_name} ({self.created_at.date()})"

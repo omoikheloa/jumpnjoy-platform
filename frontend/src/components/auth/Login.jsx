@@ -17,7 +17,6 @@ const Login = ({ onLogin, onError }) => {
       ...prev,
       [name]: value
     }));
-    // Clear error when user starts typing
     if (error) setError('');
   };
 
@@ -27,19 +26,17 @@ const Login = ({ onLogin, onError }) => {
     setError('');
 
     try {
+      // Use new apiService.login (handles token + user internally)
       const response = await apiService.login(formData.username, formData.password);
 
-      // store first
-    localStorage.setItem('authToken', response.token);
-    localStorage.setItem('user', JSON.stringify(response.user));
+      // Update app state from ApiService
+      onLogin(response.token, response.user);
 
-    // then update app state
-    onLogin(response.token, response.user);
-
+      // Navigate based on role
       if (response.user.role === 'owner') {
         navigate('/admin/dashboard');
       } else {
-        navigate('.components/EmployeeDashboard/EmployeeDashboard');
+        navigate('/employee/dashboard'); // ✅ fixed path instead of component path
       }
     } catch (err) {
       setError(err.message || 'Login failed. Please check your credentials.');
@@ -82,7 +79,7 @@ const Login = ({ onLogin, onError }) => {
               </label>
               <input
                 id="password"
-                type="text"
+                type="password"   // ✅ fixed to password input type
                 name="password"
                 value={formData.password}
                 onChange={handleChange}
@@ -117,14 +114,6 @@ const Login = ({ onLogin, onError }) => {
                 {error}
               </div>
             )}
-            
-            {/* <div className="mt-6 p-4 bg-gray-50 rounded-lg text-sm text-gray-600">
-              <h4 className="font-semibold mb-2">Demo Accounts:</h4>
-              <div className="space-y-1">
-                <p><span className="font-mono bg-white px-2 py-1 rounded">owner</span> / <span className="font-mono bg-white px-2 py-1 rounded">password123</span></p>
-                <p><span className="font-mono bg-white px-2 py-1 rounded">staff1</span> / <span className="font-mono bg-white px-2 py-1 rounded">password123</span></p>
-              </div>
-            </div> */}
           </form>
         </div>
       </div>

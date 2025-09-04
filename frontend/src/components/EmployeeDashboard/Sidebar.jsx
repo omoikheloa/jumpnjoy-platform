@@ -1,8 +1,23 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import { Home, FileText, Clock, DollarSign, Calendar, User, Settings, LogOut } from "lucide-react";
+import apiService from "../../services/api";
 
 const Sidebar = ({ activeSection, setActiveSection, onLogout }) => {
-  // Define navigation items internally
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    try {
+      await apiService.logout(); // clears token + user from storage
+      if (onLogout) {
+        onLogout();
+      }
+      navigate("/login"); // redirect to login screen
+    } catch (err) {
+      console.error("Logout failed:", err);
+    }
+  };
+
   const navigationItems = [
     { id: 'dashboard', label: 'Dashboard', icon: Home },
     { id: 'forms', label: 'Forms', icon: FileText },
@@ -30,8 +45,8 @@ const Sidebar = ({ activeSection, setActiveSection, onLogout }) => {
               onClick={() => setActiveSection(item.id)}
               className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
                 activeSection === item.id 
-                  ? 'bg-blue-600 text-white' 
-                  : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                  ? "bg-blue-600 text-white" 
+                  : "text-gray-300 hover:bg-gray-800 hover:text-white"
               }`}
             >
               <IconComponent className="w-5 h-5" />
@@ -44,7 +59,7 @@ const Sidebar = ({ activeSection, setActiveSection, onLogout }) => {
       {/* Logout Button */}
       <div className="absolute bottom-6 left-4 right-4">
         <button
-          onClick={onLogout}
+          onClick={handleLogout}
           className="w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-red-600 hover:text-white transition-colors"
         >
           <LogOut className="w-5 h-5" />

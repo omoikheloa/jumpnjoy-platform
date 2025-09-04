@@ -30,6 +30,7 @@ import ShiftForm from '../forms/ShiftForm';
 import CafeChecklistForm from '../forms/CafeChecklistForm';
 import TopHeader from './Header';
 import QuickActions from './QuickActions';
+import WaiverSigning from '../forms/WaiverSigning';
 
 // Navigation Sidebar Component
 const NavigationSidebar = ({ activeSection, setActiveSection, onLogout, navigationItems }) => {
@@ -360,6 +361,14 @@ const EmployeeDashboard = ({ onLogout }) => {
       return (
         <FormContainer selectedForm={selectedForm} setSelectedForm={setSelectedForm}>
           <StaffAppraisalForm />
+        </FormContainer>
+      );
+    }
+
+    if (selectedForm === 'performance-review') {
+      return (
+        <FormContainer selectedForm={selectedForm} setSelectedForm={setSelectedForm}>
+          <WaiverSigning />
         </FormContainer>
       );
     }
