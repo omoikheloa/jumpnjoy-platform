@@ -881,6 +881,7 @@ def sign_waiver(request):
 class WaiverViewSet(viewsets.ModelViewSet):
     queryset = Waiver.objects.all().order_by("-created_at")
     serializer_class = WaiverSerializer
+    permission_classes = [IsAuthenticated]
 
     @action(detail=False, methods=["post"], url_path="sign")
     def sign_waiver(self, request):
@@ -898,7 +899,10 @@ class WaiverViewSet(viewsets.ModelViewSet):
             )
 
         # Create waiver entry
-        waiver = Waiver.objects.create(full_name=full_name, signature=signature)
+        waiver = Waiver.objects.create(
+            full_name=full_name,
+            signature=signature
+            )
 
         # Decode signature image
         signature_data = signature.split(",")[1]  # strip "data:image/png;base64,"

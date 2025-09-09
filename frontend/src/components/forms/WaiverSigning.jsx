@@ -16,9 +16,17 @@ const WaiverSigning = () => {
         return;
     }
 
-    const signatureImage = trimCanvas(sigPad.getCanvas()).toDataURL("image/png");
+  const token = localStorage.getItem("authToken");
+  
+  // Check if token exists
+  if (!token) {
+    alert("You need to be logged in to sign the waiver.");
+    // Redirect to login page if needed
+    // window.location.href = "/login";
+    return;
+  }
 
-    const token = localStorage.getItem("authToken");
+  const signatureImage = trimCanvas(sigPad.getCanvas()).toDataURL("image/png");
 
     try {
         const response = await fetch("/api/waivers/sign/", {
@@ -36,7 +44,14 @@ const WaiverSigning = () => {
         // Check if the response status is OK (i.e., in the 200-299 range)
         if (response.ok) {
             setSubmitted(true);
+        } else if (response.status === 401) {
+            // Handle unauthorized error
+            alert("You are not authorized. Please log in.");
+            localStorage.removeItem("authToken");
+            // Optionally redirect to login page
+            // window.location.href = "/login";
         } else {
+            // Handle other errors
             const errorData = await response.json();
             alert(`Submission failed: ${errorData.message || 'Unknown error'}`);
         }
