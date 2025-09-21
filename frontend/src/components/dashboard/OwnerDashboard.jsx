@@ -38,6 +38,10 @@ import {
 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell, AreaChart, Area } from 'recharts';
 import apiService from '../../services/api';
+import CafeChecklistsView from '../forms/CafeChecklistsView';
+import IncidentReportsView from '../forms/IncidentReportsView';
+import StaffAppraisalsView from '../forms/StaffAppraisalsView';
+import UserManagementContent from './UserManagementContent';
 
 // Connection Status Indicator
 const ConnectionStatus = ({ status }) => {
@@ -336,7 +340,7 @@ const StatisticsCards = ({ dashboardData, loading }) => {
 };
 
 // Cafe Checklist Component with Date Selector
-const CafeChecklist = ({ checklists, loading, onToggleItem }) => {
+const CafeChecklist = ({ checklists, loading, onToggleItem, onViewAll }) => {
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [dateOptions, setDateOptions] = useState([]);
 
@@ -398,7 +402,9 @@ const CafeChecklist = ({ checklists, loading, onToggleItem }) => {
           <Coffee className="w-6 h-6 text-orange-600" />
           <h3 className="text-lg font-semibold text-gray-900">Cafe Checklist</h3>
         </div>
-        <button className="text-blue-600 hover:text-blue-800 text-sm font-medium">
+        <button 
+        onClick={onViewAll}
+        className="text-blue-600 hover:text-blue-800 text-sm font-medium">
           View All
         </button>
       </div>
@@ -557,7 +563,7 @@ const CafeChecklist = ({ checklists, loading, onToggleItem }) => {
 };
 
 // Enhanced Recent Incidents with better status handling
-const RecentIncidents = ({ incidents, loading }) => {
+const RecentIncidents = ({ incidents, loading, onViewAll }) => {
   if (loading) {
     return (
       <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
@@ -652,7 +658,9 @@ const RecentIncidents = ({ incidents, loading }) => {
     <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-lg font-semibold text-gray-900">Recent Incident Reports</h3>
-        <button className="text-blue-600 hover:text-blue-800 text-sm font-medium">
+        <button 
+        onClick={onViewAll}
+        className="text-blue-600 hover:text-blue-800 text-sm font-medium">
           View All
         </button>
       </div>
@@ -714,7 +722,7 @@ const RecentIncidents = ({ incidents, loading }) => {
 };
 
 // Enhanced Staff Appraisals with better layout
-const StaffAppraisals = ({ appraisals, loading }) => {
+const StaffAppraisals = ({ appraisals, loading, onViewAll }) => {
   if (loading) {
     return (
       <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
@@ -776,7 +784,9 @@ const StaffAppraisals = ({ appraisals, loading }) => {
     <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-lg font-semibold text-gray-900">Staff Appraisals</h3>
-        <button className="text-blue-600 hover:text-blue-800 text-sm font-medium">
+        <button 
+          onClick={onViewAll}
+          className="text-blue-600 hover:text-blue-800 text-sm font-medium">
           View All
         </button>
       </div>
@@ -1103,7 +1113,7 @@ const RevenueChart = ({ data }) => {
 };
 
 // Enhanced Dashboard Content with Error Handling
-const DashboardContent = () => {
+const DashboardContent = ({ setActiveSection }) => {
   const [dashboardData, setDashboardData] = useState(null);
   const [dailyStats, setDailyStats] = useState(null);
   const [incidents, setIncidents] = useState(null);
@@ -1112,6 +1122,15 @@ const DashboardContent = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
+  const handleViewAllChecklists = () => {
+    setActiveSection('cafeChecklists');
+  };
+  const handleViewAllIncidents = () => {
+    setActiveSection('incidentReports');
+  };
+  const handleViewAllAppraisals = () => {
+    setActiveSection('staffAppraisals');
+  };
 
   const fetchAllData = useCallback(async () => {
     try {
@@ -1256,250 +1275,21 @@ const DashboardContent = () => {
           checklists={cafeChecklists} 
           loading={loading} 
           onToggleItem={handleToggleChecklistItem}
+          onViewAll={handleViewAllChecklists}
         />
       </div>
       
       {/* Incidents and Appraisals */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-        <RecentIncidents incidents={incidents} loading={loading} />
-        <StaffAppraisals appraisals={appraisals} loading={loading} />
-      </div>
-    </div>
-  );
-};
-
-// User Management Content - Updated to handle the correct API response structure
-const UserManagementContent = () => {
-  const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const response = await apiService.getUsers();
-        // Extract users from response.results
-        const usersData = response.results || response;
-        setUsers(Array.isArray(usersData) ? usersData : []);
-      } catch (err) {
-        console.error('Error fetching users:', err);
-        setError(err.message);
-        
-        // Fallback mock data if API fails with some inactive users for testing
-        const mockUsers = [
-          { 
-            id: 1, 
-            username: 'admin123',
-            first_name: 'Sarah', 
-            last_name: 'Johnson', 
-            role: 'safety_coordinator', 
-            is_active: true, 
-            last_login: '2023-06-15T10:30:00Z' 
-          },
-          { 
-            id: 2, 
-            username: 'mikechen',
-            first_name: 'Mike', 
-            last_name: 'Chen', 
-            role: 'floor_supervisor', 
-            is_active: true, 
-            last_login: '2023-06-14T15:45:00Z' 
-          },
-          { 
-            id: 3, 
-            username: 'emmaw',
-            first_name: 'Emma', 
-            last_name: 'Wilson', 
-            role: 'front_desk', 
-            is_active: false, 
-            last_login: null 
-          }
-        ];
-        
-        setUsers(mockUsers);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchUsers();
-  }, []);
-
-  if (loading) {
-    return (
-      <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100">
-        <div className="animate-pulse">
-          <div className="h-8 bg-gray-200 rounded mb-6 w-1/3"></div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            {[1, 2, 3].map((index) => (
-              <div key={index} className="h-32 bg-gray-200 rounded-xl"></div>
-            ))}
-          </div>
-          <div className="space-y-4">
-            {[1, 2, 3].map((index) => (
-              <div key={index} className="h-16 bg-gray-200 rounded-lg"></div>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Debug: Log the users data to see what we're working with
-  console.log('Users data:', users);
-
-  // Safe filtering with array check - using is_active instead of status
-  const activeUsers = Array.isArray(users) ? users.filter(user => user.is_active === true).length : 0;
-  const adminUsers = Array.isArray(users) ? users.filter(user => 
-    user.role && (user.role.toLowerCase() === 'owner' || user.role.toLowerCase() === 'admin')
-  ).length : 0;
-  const inactiveUsers = Array.isArray(users) ? users.filter(user => user.is_active === false).length : 0;
-  const totalUsers = Array.isArray(users) ? users.length : 0;
-
-  // Helper function to get display name
-  const getDisplayName = (user) => {
-    if (user.first_name && user.last_name) {
-      return `${user.first_name} ${user.last_name}`;
-    }
-    if (user.full_name) {
-      return user.full_name;
-    }
-    return user.username || 'Unknown User';
-  };
-
-  // Helper function to get role display name
-  const getRoleDisplayName = (role) => {
-    const roleMap = {
-      'owner': 'Owner',
-      'admin': 'Administrator',
-      'staff': 'Staff',
-      'safety_coordinator': 'Safety Coordinator',
-      'floor_supervisor': 'Floor Supervisor',
-      'front_desk': 'Front Desk',
-      'maintenance': 'Maintenance',
-      'cafe_manager': 'Cafe Manager'
-    };
-    return roleMap[role] || role || 'No role';
-  };
-
-  return (
-    <div className="space-y-6">
-      <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900">User Management</h2>
-            <p className="text-gray-600">Manage user accounts, roles, and permissions</p>
-          </div>
-          <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center">
-            <Plus className="w-4 h-4 mr-2" />
-            Add User
-          </button>
-        </div>
-        
-        {error && (
-          <div className="bg-yellow-50 border border-yellow-200 text-yellow-700 px-4 py-3 rounded-lg mb-6">
-            <p>Error: {error}</p>
-          </div>
-        )}
-
-        {/* Debug info
-        <div className="bg-gray-50 p-4 rounded-lg mb-6">
-          <p className="text-sm text-gray-600">
-            Loaded {totalUsers} users | Active: {activeUsers} | Inactive: {inactiveUsers} | Admin: {adminUsers}
-          </p>
-        </div> */}
-        
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="p-6 bg-blue-50 rounded-xl">
-            <Users className="w-8 h-8 text-blue-600 mx-auto mb-3" />
-            <h3 className="font-semibold text-gray-900 mb-2 text-center">Total Users</h3>
-            <p className="text-2xl font-bold text-blue-600 text-center">{totalUsers}</p>
-          </div>
-          <div className="p-6 bg-green-50 rounded-xl">
-            <UserCheck className="w-8 h-8 text-green-600 mx-auto mb-3" />
-            <h3 className="font-semibold text-gray-900 mb-2 text-center">Active Users</h3>
-            <p className="text-2xl font-bold text-green-600 text-center">{activeUsers}</p>
-          </div>
-          <div className="p-6 bg-purple-50 rounded-xl">
-            <Shield className="w-8 h-8 text-purple-600 mx-auto mb-3" />
-            <h3 className="font-semibold text-gray-900 mb-2 text-center">Admin Users</h3>
-            <p className="text-2xl font-bold text-purple-600 text-center">{adminUsers}</p>
-          </div>
-          <div className="p-6 bg-yellow-50 rounded-xl">
-            <Clock className="w-8 h-8 text-yellow-600 mx-auto mb-3" />
-            <h3 className="font-semibold text-gray-900 mb-2 text-center">Inactive</h3>
-            <p className="text-2xl font-bold text-yellow-600 text-center">{inactiveUsers}</p>
-          </div>
-        </div>
-
-        <div className="overflow-x-auto">
-          <table className="w-full table-auto">
-            <thead>
-              <tr className="bg-gray-50">
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Username</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Login</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {Array.isArray(users) && users.length > 0 ? (
-                users.map((user) => (
-                  <tr key={user.id}>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center mr-3">
-                          <span className="text-white font-semibold text-sm">
-                            {getDisplayName(user).split(' ').map(n => n[0]).join('').toUpperCase()}
-                          </span>
-                        </div>
-                        <div>
-                          <div className="text-sm font-medium text-gray-900">{getDisplayName(user)}</div>
-                          <div className="text-xs text-gray-500">{user.email || 'No email'}</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {user.username || 'N/A'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {getRoleDisplayName(user.role)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2 py-1 text-xs rounded-full font-medium ${
-                        user.is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-                      }`}>
-                        {user.is_active ? 'Active' : 'Inactive'}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {user.last_login ? new Date(user.last_login).toLocaleDateString() : 'Never'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <button className="text-blue-600 hover:text-blue-900 mr-3">
-                        <Edit className="w-4 h-4 inline mr-1" />
-                        Edit
-                      </button>
-                      <button className="text-red-600 hover:text-red-900">
-                        <Trash2 className="w-4 h-4 inline mr-1" />
-                        Delete
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan="6" className="px-6 py-8 text-center text-gray-500">
-                    <Users className="w-12 h-12 text-gray-300 mx-auto mb-2" />
-                    <p>No users found</p>
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+        <RecentIncidents 
+          incidents={incidents} 
+          loading={loading} 
+          onViewAll={handleViewAllIncidents} 
+        />
+        <StaffAppraisals 
+        appraisals={appraisals} 
+        loading={loading}
+        onViewAll={handleViewAllAppraisals} />
       </div>
     </div>
   );
@@ -1623,33 +1413,33 @@ const AnalyticsContent = () => {
   );
 };
 
-// Settings Content
-const SettingsContent = () => {
-  return (
-    <div className="space-y-6">
-      <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100">
-        <div className="text-center">
-          <Settings className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">System Settings</h2>
-          <p className="text-gray-600 mb-6">Configure system preferences and integrations.</p>
+// // Settings Content
+// const SettingsContent = () => {
+//   return (
+//     <div className="space-y-6">
+//       <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100">
+//         <div className="text-center">
+//           <Settings className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+//           <h2 className="text-xl font-semibold text-gray-900 mb-2">System Settings</h2>
+//           <p className="text-gray-600 mb-6">Configure system preferences and integrations.</p>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto">
-            <div className="p-6 bg-gray-50 rounded-xl text-left">
-              <Bell className="w-8 h-8 text-gray-600 mb-3" />
-              <h3 className="font-semibold text-gray-900 mb-2">Notifications</h3>
-              <p className="text-gray-600 text-sm">Manage alert settings and notification preferences.</p>
-            </div>
-            <div className="p-6 bg-gray-50 rounded-xl text-left">
-              <Lock className="w-8 h-8 text-gray-600 mb-3" />
-              <h3 className="font-semibold text-gray-900 mb-2">Security</h3>
-              <p className="text-gray-600 text-sm">Configure security settings and access controls.</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
+//           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto">
+//             <div className="p-6 bg-gray-50 rounded-xl text-left">
+//               <Bell className="w-8 h-8 text-gray-600 mb-3" />
+//               <h3 className="font-semibold text-gray-900 mb-2">Notifications</h3>
+//               <p className="text-gray-600 text-sm">Manage alert settings and notification preferences.</p>
+//             </div>
+//             <div className="p-6 bg-gray-50 rounded-xl text-left">
+//               <Lock className="w-8 h-8 text-gray-600 mb-3" />
+//               <h3 className="font-semibold text-gray-900 mb-2">Security</h3>
+//               <p className="text-gray-600 text-sm">Configure security settings and access controls.</p>
+//             </div>
+//           </div>
+//         </div>
+//       </div>
+//     </div>
+//   );
+// };
 
 // Main Admin Dashboard Component
 const OwnerDashboard = ({ onLogout }) => {
@@ -1685,25 +1475,31 @@ const OwnerDashboard = ({ onLogout }) => {
       label: 'Analytics', 
       icon: BarChart3 
     },
-    { 
-      id: 'settings', 
-      label: 'Settings', 
-      icon: Settings 
-    },
+    // { 
+    //   id: 'settings', 
+    //   label: 'Settings', 
+    //   icon: Settings 
+    // },
   ];
 
   const renderContent = () => {
     switch (activeSection) {
       case 'dashboard':
-        return <DashboardContent />;
+        return <DashboardContent setActiveSection={setActiveSection} />;
+      case 'cafeChecklists':
+        return <CafeChecklistsView onBack={() => setActiveSection('dashboard')} />;
+      case 'incidentReports':
+        return <IncidentReportsView onBack={() => setActiveSection('dashboard')} />;
+      case 'staffAppraisals':
+        return <StaffAppraisalsView onBack={() => setActiveSection('dashboard')} />;
       case 'users':
-        return <UserManagementContent />;
+        return <UserManagementContent onBack={() => setActiveSection('dashboard')} />;
       case 'analytics':
         return <AnalyticsContent />;
-      case 'settings':
-        return <SettingsContent />;
+      // case 'settings':
+      //   return <SettingsContent />;
       default:
-        return <DashboardContent />;
+        return <DashboardContent setActiveSection={setActiveSection} />;
     }
   };
 
