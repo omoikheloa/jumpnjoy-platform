@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Users, 
   FileText, 
@@ -31,6 +31,7 @@ import CafeChecklistForm from '../forms/CafeChecklistForm';
 import TopHeader from './Header';
 import QuickActions from './QuickActions';
 import WaiverSigning from '../forms/WaiverSigning';
+import apiService from '../../services/api';
 
 // Navigation Sidebar Component
 const NavigationSidebar = ({ activeSection, setActiveSection, onLogout, navigationItems }) => {
@@ -76,11 +77,9 @@ const NavigationSidebar = ({ activeSection, setActiveSection, onLogout, navigati
   );
 };
 
-// Top Header Component
-<TopHeader />
-
 // Welcome Banner Component
-const WelcomeBanner = ({ userName = "Jenna" }) => {
+const WelcomeBanner = () => {
+  const [user, setUser] = useState(apiService.getCurrentUser());
   return (
     <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl p-8 text-white">
       <div className="flex items-center space-x-4">
@@ -88,16 +87,13 @@ const WelcomeBanner = ({ userName = "Jenna" }) => {
           <User className="w-8 h-8 text-white" />
         </div>
         <div>
-          <h1 className="text-3xl font-bold mb-2">Welcome back, {userName}! 👋</h1>
+          <h1 className="text-3xl font-bold mb-2">Welcome back, {user.first_name}! 👋</h1>
           <p className="text-blue-100 text-lg">How are you today? Ready to make it a productive day?</p>
         </div>
       </div>
     </div>
   );
 };
-
-// Quick Actions Component
-<QuickActions />
 
 // Recent Activity Component
 const RecentActivity = ({ activities }) => {
@@ -219,7 +215,7 @@ const PlaceholderSection = ({ icon: IconComponent, title, description }) => {
 };
 
 // Main Dashboard Content Component
-const DashboardContent = ({ formLinks, setActiveSection, setSelectedForm, recentActivities, scheduleItems }) => {
+const DashboardContent = ({ formLinks, setActiveSection, setSelectedForm, recentActivities, scheduleItems, userName }) => {
   return (
     <div className="space-y-6">
       <WelcomeBanner />
@@ -233,14 +229,6 @@ const DashboardContent = ({ formLinks, setActiveSection, setSelectedForm, recent
     </div>
   );
 };
-
-// Form Components
-<MaintenanceForm />,
-<SafetyCheckForm />,
-<IncidentReportForm />,
-<CleaningForm />,
-<DailyStatsForm />,
-<ShiftForm />
 
 // Main Employee Dashboard Component
 const EmployeeDashboard = ({ onLogout }) => {
@@ -259,10 +247,12 @@ const EmployeeDashboard = ({ onLogout }) => {
   const formLinks = [
     { id: 'maintenance-form', label: 'Maintenance Log', description: 'Log equipment maintenance activities', status: 'active' },
     { id: 'safety-check', label: 'Safety Inspection', description: 'Daily safety checks for trampolines', status: 'active' },
-    { id: 'daily-inspection', label: 'Daily Inspection', description: 'Inspections on equipment on a day to day basis', status: 'active' },
-    { id: 'expense-report', label: 'Expense Report', description: 'File expense claims', status: 'active' },
-    { id: 'performance-review', label: 'Performance Review', description: 'Self-assessment forms', status: 'active' },
     { id: 'incident-report', label: 'Incident Report', description: 'Report workplace incidents', status: 'active' },
+    { id: 'cleaning-form', label: 'Cleaning Log', description: 'Record cleaning activities', status: 'active' },
+    { id: 'daily-stats', label: 'Daily Statistics', description: 'Record daily performance metrics', status: 'active' },
+    { id: 'staff-appraisal', label: 'Staff Appraisal', description: 'Employee performance reviews', status: 'active' },
+    { id: 'shift-form', label: 'Shift Management', description: 'Manage shift schedules', status: 'active' },
+    { id: 'waiver-signing', label: 'Waiver Signing', description: 'Customer waiver processing', status: 'active' },
   ];
 
   const recentActivities = [
@@ -332,49 +322,29 @@ const EmployeeDashboard = ({ onLogout }) => {
   ];
 
   const renderForms = () => {
-    // If a specific form is selected, render it
-    if (selectedForm === 'maintenance-form') {
-      return (
-        <FormContainer selectedForm={selectedForm} setSelectedForm={setSelectedForm}>
-          <MaintenanceForm />
-        </FormContainer>
-      );
-    }
-    
-    if (selectedForm === 'safety-check') {
-      return (
-        <FormContainer selectedForm={selectedForm} setSelectedForm={setSelectedForm}>
-          <SafetyCheckForm />
-        </FormContainer>
-      );
-    }
-
-    if (selectedForm === 'daily-inspection') {
-      return (
-        <FormContainer selectedForm={selectedForm} setSelectedForm={setSelectedForm}>
-          <IncidentReportForm />
-        </FormContainer>
-      );
+    if (selectedForm) {
+      const formComponents = {
+        'maintenance-form': MaintenanceForm,
+        'safety-check': SafetyCheckForm,
+        'incident-report': IncidentReportForm,
+        'cleaning-form': CleaningForm,
+        'daily-stats': DailyStatsForm,
+        'staff-appraisal': StaffAppraisalForm,
+        'shift-form': ShiftForm,
+        'waiver-signing': WaiverSigning,
+      };
+      
+      const FormComponent = formComponents[selectedForm];
+      
+      if (FormComponent) {
+        return (
+          <FormContainer selectedForm={selectedForm} setSelectedForm={setSelectedForm}>
+            <FormComponent />
+          </FormContainer>
+        );
+      }
     }
 
-    if (selectedForm === 'expense-report') {
-      return (
-        <FormContainer selectedForm={selectedForm} setSelectedForm={setSelectedForm}>
-          <StaffAppraisalForm />
-        </FormContainer>
-      );
-    }
-
-    if (selectedForm === 'performance-review') {
-      return (
-        <FormContainer selectedForm={selectedForm} setSelectedForm={setSelectedForm}>
-          <WaiverSigning />
-        </FormContainer>
-      );
-    }
-
-
-    // Default forms listing
     return <FormsList formLinks={formLinks} setSelectedForm={setSelectedForm} />;
   };
 
@@ -425,7 +395,6 @@ const EmployeeDashboard = ({ onLogout }) => {
           showProfileDropdown={showProfileDropdown}
           setShowProfileDropdown={setShowProfileDropdown}
           onLogout={onLogout}
-          userName="Jenna"
         />
 
         <main className="p-6">
