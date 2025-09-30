@@ -1,13 +1,7 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from . import views
-from .views import (
-    DashboardViewSet, AnalyticsViewSet, UserViewSet,
-    DailyStatsViewSet, CafeChecklistViewSet, SafetyCheckViewSet, IncidentReportViewSet, StaffShiftViewSet,
-    CleaningLogViewSet, MaintenanceLogViewSet, StaffAppraisalViewSet,
-    DailyInspectionListCreateView, DailyInspectionDetailView,
-    RemedialActionListCreateView, RemedialActionDetailView, WaiverViewSet
-)
+from .views import *
 
 # Create a single router for all ViewSets
 router = DefaultRouter()
@@ -23,6 +17,7 @@ router.register(r'cleaning', CleaningLogViewSet, basename='cleaninglog')
 router.register(r'maintenance', MaintenanceLogViewSet, basename='maintenancelog')
 router.register(r'appraisals', StaffAppraisalViewSet, basename='staffappraisal')
 router.register(r"waivers", WaiverViewSet, basename="waiver")
+router.register(r'waiver-sessions', WaiverSessionViewSet, basename='waiversession')
 
 # Define all URL patterns
 urlpatterns = [
@@ -46,6 +41,11 @@ urlpatterns = [
     
     # Inspection Dashboard endpoint 
     path('inspection-dashboard/', views.inspection_dashboard, name='inspection-dashboard'),
+
+    #Waiver endpoints
+    path('api/', include(router.urls)),
+    path('api/dashboard/stats/', views.dashboard_stats, name='dashboard-stats'),
+    path('api/waiver/<str:token>/', views.PublicWaiverSignView.as_view(), name='public-waiver-sign'),
     
     # Include all router-generated URLs
     path('', include(router.urls)),

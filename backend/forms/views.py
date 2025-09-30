@@ -2,29 +2,25 @@ from rest_framework import viewsets, status, permissions, filters, generics
 from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.views import APIView
+from django.shortcuts import get_object_or_404
 from rest_framework.exceptions import ValidationError
+from django.core.files.base import ContentFile
 from django.contrib.auth import login
 from django.db.models import Count, Sum, Q, Avg
 from django.utils import timezone
 from datetime import timedelta, datetime
 from decimal import Decimal
-import calendar, base64, datetime
-from io import BytesIO
-from django.http import HttpResponse, FileResponse
+import calendar, base64, datetime, io
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
-from django.core.files.base import ContentFile
 from .models import (
     BusinessTarget, CustomerSatisfactionSurvey, User, SafetyCheck, IncidentReport, StaffShift, CleaningLog,
-    MaintenanceLog, DailyStats, StaffAppraisal, CafeChecklist, DailyInspection, RemedialAction, Waiver
+    MaintenanceLog, DailyStats, StaffAppraisal, CafeChecklist, DailyInspection, RemedialAction, Waiver, WaiverSession
 )
 from .permissions import AppraisalAccessPermission
-from .serializers import (
-    UserSerializer, AuthSerializer, SafetyCheckSerializer, IncidentReportSerializer,
-    StaffShiftSerializer, CleaningLogSerializer, MaintenanceLogSerializer,
-    DailyStatsSerializer, StaffAppraisalSerializer, CafeChecklistSerializer, DailyInspectionSerializer, RemedialActionSerializer, WaiverSerializer
-)
+from .serializers import *
 
 
 class IsOwnerOrStaffReadOnly(permissions.BasePermission):
@@ -835,113 +831,227 @@ class CafeChecklistViewSet(viewsets.ModelViewSet):
         serializer = CafeChecklistSerializer(updated_items, many=True)
         return Response(serializer.data)
     
-def sign_waiver(request):
-    """
-    Expects JSON: { "full_name": "...", "signature": "data:image/png;base64,..." }
-    """
-    import json
-    body = json.loads(request.body.decode("utf-8"))
-    full_name = body["full_name"]
-    signature_data = body["signature"].split(",")[1]  # strip data:image/png;base64,
-    signature_bytes = base64.b64decode(signature_data)
-
-    # Create PDF in memory
-    buffer = BytesIO()
-    c = canvas.Canvas(buffer, pagesize=A4)
-    width, height = A4
-
-    # Waiver text
-    c.setFont("Helvetica", 12)
-    c.drawString(50, height - 100, "Event Waiver Agreement")
-    text = (
-        "By signing this waiver, you agree to release the organizers "
-        "from any liability for injuries or damages during the event."
-    )
-    c.drawString(50, height - 130, text)
-
-    # Full name
-    c.drawString(50, height - 180, f"Full Name: {full_name}")
-
-    # Signature image
-    sig_buffer = BytesIO(signature_bytes)
-    c.drawImage(sig_buffer, 50, height - 300, width=200, height=80, mask='auto')
-
-    # Date
-    import datetime
-    c.drawString(50, height - 330, f"Signed on: {datetime.date.today()}")
-
-    c.showPage()
-    c.save()
-
-    buffer.seek(0)
-    response = HttpResponse(buffer, content_type="application/pdf")
-    response["Content-Disposition"] = f'attachment; filename="waiver_{full_name}.pdf"'
-    return response
-
-class WaiverViewSet(viewsets.ModelViewSet):
-    queryset = Waiver.objects.all().order_by("-created_at")
-    serializer_class = WaiverSerializer
+class WaiverSessionViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
+    
+    def get_serializer_class(self):
+        if self.action == 'create':
+            return WaiverSessionCreateSerializer
+        return WaiverSessionSerializer
 
-    @action(detail=False, methods=["post"], url_path="sign")
-    def sign_waiver(self, request):
-        """
-        POST { full_name: "...", signature: "data:image/png;base64,..." }
-        Returns a generated PDF file.
-        """
-        full_name = request.data.get("full_name")
-        signature = request.data.get("signature")
+    def get_queryset(self):
+        user = self.request.user
+        if hasattr(user, 'role') and user.role == 'admin':
+            return WaiverSession.objects.all().order_by('-created_at')
+        return WaiverSession.objects.filter(staff=user).order_by('-created_at')
 
-        if not full_name or not signature:
+    def perform_create(self, serializer):
+        serializer.save(staff=self.request.user)
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['request'] = self.request
+        return context
+
+class PublicWaiverSignView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request, token):
+        session = get_object_or_404(WaiverSession, token=token)
+        
+        if not session.is_valid():
             return Response(
-                {"error": "Full name and signature are required"},
-                status=status.HTTP_400_BAD_REQUEST,
+                {"error": "This waiver link has expired or has already been used"},
+                status=status.HTTP_410_GONE
             )
 
-        # Create waiver entry
-        waiver = Waiver.objects.create(
-            full_name=full_name,
-            signature=signature
+        return Response({
+            "session_id": str(session.id),
+            "participant_email": session.participant_email,
+            "participant_name": session.participant_name,
+            "staff_name": f"{session.staff.first_name} {session.staff.last_name}".strip() or session.staff.username,
+        })
+
+    def post(self, request, token):
+        session = get_object_or_404(WaiverSession, token=token)
+        
+        if not session.is_valid():
+            return Response(
+                {"error": "This waiver link has expired or has already been used"},
+                status=status.HTTP_410_GONE
             )
 
-        # Decode signature image
-        signature_data = signature.split(",")[1]  # strip "data:image/png;base64,"
-        signature_bytes = base64.b64decode(signature_data)
+        serializer = WaiverSignSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        # Generate PDF
-        buffer = BytesIO()
-        c = canvas.Canvas(buffer, pagesize=A4)
-        width, height = A4
+        try:
+            # Create waiver
+            waiver = Waiver.objects.create(
+                session=session,
+                full_name=serializer.validated_data['full_name'],
+                signature=serializer.validated_data['signature'],
+                ip_address=self.get_client_ip(request),
+                user_agent=request.META.get('HTTP_USER_AGENT', '')
+            )
 
-        # Title + text
+            # Mark session as used
+            session.is_used = True
+            session.save()
+
+            # Generate PDF
+            pdf_buffer = self.generate_waiver_pdf(waiver)
+            
+            # Save PDF
+            pdf_filename = f"waiver_{waiver.full_name.replace(' ', '_')}_{waiver.signed_at.date()}.pdf"
+            waiver.pdf_file.save(pdf_filename, ContentFile(pdf_buffer.getvalue()))
+            waiver.save()
+
+            return Response({
+                "success": True,
+                "waiver_id": str(waiver.id),
+                "message": "Waiver signed successfully",
+                "pdf_url": waiver.pdf_file.url
+            }, status=status.HTTP_201_CREATED)
+
+        except Exception as e:
+            return Response(
+                {"error": "Failed to process waiver", "details": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+    def generate_waiver_pdf(self, waiver):
+        buffer = io.BytesIO()
+        c = canvas.Canvas(buffer, pagesize=letter)
+        width, height = letter
+
+        # Title
         c.setFont("Helvetica-Bold", 16)
-        c.drawString(50, height - 100, "Event Waiver Agreement")
-        c.setFont("Helvetica", 12)
-        waiver_text = (
-            "By signing this waiver, you agree to release the organizers "
-            "from any liability for injuries or damages sustained during the event."
-        )
-        c.drawString(50, height - 130, waiver_text)
+        c.drawString(72, height - 72, "LIABILITY WAIVER AND RELEASE AGREEMENT")
 
-        # Full name
-        c.drawString(50, height - 180, f"Full Name: {full_name}")
+        # Content
+        c.setFont("Helvetica", 10)
+        y_position = height - 120
+        
+        # Terms
+        terms = [
+            "I acknowledge that I am voluntarily participating in activities and assume all risks.",
+            "I hereby release the organization from any and all liability claims.",
+            "I confirm that I am in good health and physically capable of participating.",
+            "I authorize emergency medical treatment if necessary.",
+        ]
+        
+        for term in terms:
+            c.drawString(72, y_position, term)
+            y_position -= 20
 
-        # Signature image
-        sig_buffer = BytesIO(signature_bytes)
-        c.drawImage(sig_buffer, 50, height - 260, width=200, height=80, mask="auto")
+        # Signature section
+        y_position -= 40
+        c.setFont("Helvetica-Bold", 12)
+        c.drawString(72, y_position, "PARTICIPANT INFORMATION")
+        
+        y_position -= 20
+        c.setFont("Helvetica", 10)
+        c.drawString(72, y_position, f"Full Name: {waiver.full_name}")
+        
+        y_position -= 15
+        c.drawString(72, y_position, f"Signed Date: {waiver.signed_at.strftime('%B %d, %Y at %I:%M %p')}")
+        
+        if waiver.session.participant_email:
+            y_position -= 15
+            c.drawString(72, y_position, f"Email: {waiver.session.participant_email}")
 
-        # Date
-        c.drawString(50, height - 360, f"Signed on: {datetime.date.today()}")
+        # Signature
+        y_position -= 40
+        c.setFont("Helvetica-Bold", 12)
+        c.drawString(72, y_position, "SIGNATURE")
+        
+        if waiver.signature:
+            try:
+                signature_data = waiver.signature.split(",")[1]
+                signature_bytes = base64.b64decode(signature_data)
+                signature_image = ImageReader(io.BytesIO(signature_bytes))
+                
+                y_position -= 5
+                c.drawImage(signature_image, 72, y_position - 60, width=200, height=50)
+                y_position -= 70
+                c.drawString(72, y_position, f"Digitally signed by: {waiver.full_name}")
+            except Exception:
+                y_position -= 20
+                c.drawString(72, y_position, "Signature: [Unable to display]")
 
-        c.showPage()
         c.save()
         buffer.seek(0)
+        return buffer
 
-        # Save PDF to model
-        pdf_filename = f"waiver_{full_name.replace(' ', '_')}.pdf"
-        waiver.pdf_file.save(pdf_filename, ContentFile(buffer.getvalue()))
-        waiver.save()
+    def get_client_ip(self, request):
+        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+        if x_forwarded_for:
+            ip = x_forwarded_for.split(',')[0]
+        else:
+            ip = request.META.get('REMOTE_ADDR')
+        return ip
 
-        # Return the PDF response
-        buffer.seek(0)
-        return FileResponse(buffer, as_attachment=True, filename=pdf_filename)
+class WaiverViewSet(viewsets.ReadOnlyModelViewSet):
+    permission_classes = [IsAuthenticated]
+    serializer_class = WaiverSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        queryset = Waiver.objects.all()
+        
+        # Filter by user role
+        if not (hasattr(user, 'role') and user.role == 'admin'):
+            queryset = queryset.filter(session__staff=user)
+        
+        # Search functionality
+        search_query = self.request.query_params.get('search', None)
+        if search_query:
+            queryset = queryset.filter(
+                Q(full_name__icontains=search_query) |
+                Q(session__participant_name__icontains=search_query) |
+                Q(session__participant_email__icontains=search_query)
+            )
+        
+        return queryset.order_by('-signed_at')
+
+    @action(detail=True, methods=['get'])
+    def download(self, request, pk=None):
+        """Download waiver PDF"""
+        waiver = self.get_object()
+        
+        # Check permissions
+        if not (request.user.is_staff or waiver.session.staff == request.user):
+            return Response(
+                {"error": "Permission denied"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        if not waiver.pdf_file:
+            return Response(
+                {"error": "PDF not available"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        response = FileResponse(waiver.pdf_file.open('rb'), content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="waiver_{waiver.full_name}.pdf"'
+        return response
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def dashboard_stats(request):
+    """Get dashboard statistics"""
+    user = request.user
+    
+    if hasattr(user, 'role') and user.role == 'admin':
+        sessions = WaiverSession.objects.all()
+        waivers = Waiver.objects.all()
+    else:
+        sessions = WaiverSession.objects.filter(staff=user)
+        waivers = Waiver.objects.filter(session__staff=user)
+    
+    return Response({
+        "total_sessions": sessions.count(),
+        "signed_waivers": waivers.count(),
+        "pending_sessions": sessions.filter(is_used=False).count(),
+    })

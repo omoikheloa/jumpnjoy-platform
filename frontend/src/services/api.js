@@ -502,6 +502,64 @@ class ApiService {
   isAuthenticated() {
     return !!this.token;
   }
+
+    // Waiver Dashboard
+  async getWaiverDashboardStats() {
+    return this.get('/dashboard/stats/');
+  }
+
+  // Waiver Sessions
+  async getWaiverSessions() {
+    return this.get('/waiver-sessions/');
+  }
+
+  async createWaiverSession(data) {
+    return this.post('/waiver-sessions/', data);
+  }
+
+  // Waivers
+  async getWaivers(search = '') {
+    const params = new URLSearchParams();
+    if (search) params.append('search', search);
+    return this.get(`/waivers/?${params.toString()}`);
+  }
+
+  async downloadWaiver(waiverId) {
+    const response = await fetch(`${this.baseURL}/waivers/${waiverId}/download/`, {
+      method: 'GET',
+      headers: this.getHeaders(),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    return await response.blob();
+  }
+
+  // Public waiver endpoints (no authentication required)
+  async getPublicWaiverSession(token) {
+    const response = await fetch(`${this.baseURL}/waiver/${token}/`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    
+    return this.handleResponse(response);
+  }
+
+  async signPublicWaiver(token, data) {
+    const response = await fetch(`${this.baseURL}/waiver/${token}/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+    
+    return this.handleResponse(response);
+  }
 }
 
 // Create singleton instance

@@ -5,7 +5,7 @@ from django.contrib.auth.hashers import make_password
 from .models import (
     SafetyCheck, IncidentReport, StaffShift, CleaningLog, 
     MaintenanceLog, DailyStats, CafeChecklist, StaffAppraisal,
-    CustomerSatisfactionSurvey, BusinessTarget, DailyInspection, RemedialAction, Waiver
+    CustomerSatisfactionSurvey, BusinessTarget, DailyInspection, RemedialAction, Waiver, WaiverSession
 )
 
 User = get_user_model()
@@ -428,8 +428,55 @@ class BusinessTargetSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['id', 'target_type_display', 'created_at']
 
+class WaiverSessionSerializer(serializers.ModelSerializer):
+    staff_name = serializers.CharField(source='staff.get_full_name', read_only=True)
+    waiver_link = serializers.SerializerMethodField()
+    status = serializers.SerializerMethodField()
+
+    class Meta:
+        model = WaiverSession
+        fields = ['id', 'staff_name', 'participant_email', 'participant_name', 
+                 'token', 'is_used', 'expires_at', 'created_at', 'waiver_link', 'status']
+        read_only_fields = ['id', 'token', 'created_at']
+
+    def get_waiver_link(self, obj):
+        request = self.context.get('request')
+        if request and obj.token:
+            return f"{request.scheme}://{request.get_host()}/waiver/{obj.token}/"
+        return None
+
+    def get_status(self, obj):
+        if obj.is_used:
+            return "Signed"
+        elif not obj.is_valid():
+            return "Expired"
+        return "Pending"
+
+class WaiverSessionCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = WaiverSession
+        fields = ['participant_email', 'participant_name']
+
+class WaiverSignSerializer(serializers.Serializer):
+    full_name = serializers.CharField(max_length=255)
+    signature = serializers.CharField()
+
+    def validate_full_name(self, value):
+        if len(value.strip()) < 2:
+            raise serializers.ValidationError("Full name must be at least 2 characters long.")
+        return value.strip()
+
 class WaiverSerializer(serializers.ModelSerializer):
+    session = WaiverSessionSerializer(read_only=True)
+    pdf_url = serializers.SerializerMethodField()
+
     class Meta:
         model = Waiver
-        fields = ["id", "full_name", "signature", "pdf_file", "created_at"]
-        read_only_fields = ["id", "pdf_file", "created_at"]
+        fields = ['id', 'session', 'full_name', 'pdf_file', 'pdf_url', 
+                 'ip_address', 'signed_at']
+        read_only_fields = ['id', 'session', 'pdf_file', 'ip_address', 'signed_at']
+
+    def get_pdf_url(self, obj):
+        if obj.pdf_file:
+            return obj.pdf_file.url
+        return None

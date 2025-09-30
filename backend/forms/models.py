@@ -6,6 +6,8 @@ from django.conf import settings
 from django.db.models import Avg, Sum, Count
 from datetime import datetime, timedelta
 from decimal import Decimal
+import uuid
+import secrets
 
 class User(AbstractUser):
     """
@@ -562,12 +564,41 @@ class BusinessTarget(models.Model):
     def __str__(self):
         return f"{self.get_target_type_display()} - {self.month}/{self.year} - Target: {self.target_value}"
     
-
-class Waiver(models.Model):
-    full_name = models.CharField(max_length=255)
-    signature = models.TextField()  # store base64 signature if needed
-    pdf_file = models.FileField(upload_to="waivers/", null=True, blank=True)
+class WaiverSession(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    staff = models.ForeignKey(User, on_delete=models.CASCADE, related_name='waiver_sessions')
+    participant_email = models.EmailField(blank=True, null=True)
+    participant_name = models.CharField(max_length=255, blank=True, null=True)
+    token = models.CharField(max_length=64, unique=True, editable=False)
+    is_used = models.BooleanField(default=False)
+    expires_at = models.DateTimeField()
     created_at = models.DateTimeField(auto_now_add=True)
+    
+    def save(self, *args, **kwargs):
+        if not self.token:
+            self.token = secrets.token_urlsafe(48)
+        if not self.expires_at:
+            self.expires_at = timezone.now() + timedelta(days=7)
+        super().save(*args, **kwargs)
+    
+    def is_valid(self):
+        return not self.is_used and timezone.now() < self.expires_at
 
     def __str__(self):
-        return f"Waiver for {self.full_name} ({self.created_at.date()})"
+        return f"WaiverSession {self.token}"
+
+class Waiver(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    session = models.OneToOneField(WaiverSession, on_delete=models.CASCADE, related_name='waiver', null=True, blank=True)
+    full_name = models.CharField(max_length=255)
+    signature = models.TextField()
+    pdf_file = models.FileField(upload_to="waivers/%Y/%m/%d/", null=True, blank=True)
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+    user_agent = models.TextField(null=True, blank=True)
+    signed_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-signed_at']
+
+    def __str__(self):
+        return f"Waiver for {self.full_name}"
