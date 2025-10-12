@@ -23,15 +23,23 @@ import {
   Star,
   Crown,
   CheckCircle,
-  AlertTriangle
+  AlertTriangle,
+  Coffee,
+  UserCog,
+  PartyPopper,
+  Headphones,
+  ArrowLeft,
+  ArrowRight
 } from 'lucide-react';
 import apiService from '../../services/api';
 
-// Constants
+// Constants - UPDATED ROLES
 const USER_ROLES = [
-  { value: 'staff', label: 'Staff', color: 'bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700', icon: Users, description: 'General Staff member with regular access' },
-  { value: 'admin', label: 'Administrator', color: 'bg-gradient-to-r from-purple-100 to-purple-200 text-purple-700  ', icon: Shield, description: 'Admin with elevated privileges' },
-  { value: 'owner', label: 'Owner', color: 'bg-gradient-to-r from-yellow-100 to-orange-200 text-orange-700' , icon: Crown, description: 'Owner with full access and control' },
+  { value: 'marshal', label: 'Marshal', color: 'bg-gradient-to-r from-blue-100 to-blue-200 text-blue-700', icon: Shield, description: 'Safety marshal with trampoline area access' },
+  { value: 'reception', label: 'Reception', color: 'bg-gradient-to-r from-green-100 to-green-200 text-green-700', icon: Headphones, description: 'Front desk and customer service staff' },
+  { value: 'party_host', label: 'Party Host', color: 'bg-gradient-to-r from-purple-100 to-purple-200 text-purple-700', icon: PartyPopper, description: 'Event and party coordination staff' },
+  { value: 'cafe', label: 'Cafe Staff', color: 'bg-gradient-to-r from-orange-100 to-orange-200 text-orange-700', icon: Coffee, description: 'Cafe operations and food service' },
+  { value: 'owner', label: 'Owner', color: 'bg-gradient-to-r from-yellow-100 to-orange-200 text-orange-700', icon: Crown, description: 'Owner with full access and control' },
 ];
 
 const JumpNJoyLogo = ({ size = "w-8 h-8" }) => (
@@ -54,7 +62,7 @@ const INITIAL_FORM_DATA = {
   first_name: '',
   last_name: '',
   password: '',
-  role: 'staff',
+  role: 'marshal',
   phone: '',
   is_active: true
 };
@@ -87,11 +95,12 @@ const generateAvatarColor = (name) => {
     'from-yellow-500 to-orange-500',
     'from-pink-500 to-rose-500'
   ];
-  const hash = name.split('').reduce((a, b) => a + b.charCodeAt(0), 0);
+  const hash = name?.split('').reduce((a, b) => a + b.charCodeAt(0), 0) || 0;
   return colors[hash % colors.length];
 };
 
 const validateEmail = (email) => {
+  if (!email) return true; // Email is optional
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return emailRegex.test(email);
 };
@@ -127,7 +136,7 @@ const validateForm = (formData, isEdit = false) => {
 };
 
 const CustomInput = ({ label, type = "text", required = false, error = null, icon: Icon, ...props }) => (
-  <div className="space-y-2 group animate-slide-in">
+  <div className="space-y-2 group">
     <label className="block text-sm font-semibold text-gray-700 group-focus-within:text-blue-600 transition-colors duration-300">
       {label} {required && <span className="text-red-500">*</span>}
     </label>
@@ -161,7 +170,7 @@ const CustomInput = ({ label, type = "text", required = false, error = null, ico
   </div>
 );
 
-// Enhanced Add User Modal Component
+// Enhanced Add User Modal Component with proper scroll handling
 const AddUserModal = ({ isOpen, onClose, onUserAdded }) => {
   const [formData, setFormData] = useState(INITIAL_FORM_DATA);
   const [loading, setLoading] = useState(false);
@@ -193,6 +202,46 @@ const AddUserModal = ({ isOpen, onClose, onUserAdded }) => {
     }
   }, [errors]);
 
+  const validateStep = (step) => {
+    const stepErrors = {};
+    
+    switch (step) {
+      case 0:
+        if (!formData.first_name?.trim()) stepErrors.first_name = 'First name is required';
+        if (!formData.last_name?.trim()) stepErrors.last_name = 'Last name is required';
+        break;
+      case 1:
+        if (!formData.username?.trim()) stepErrors.username = 'Username is required';
+        else if (formData.username.length < 3) stepErrors.username = 'Username must be at least 3 characters';
+        if (!formData.password) stepErrors.password = 'Password is required';
+        else if (formData.password.length < 8) stepErrors.password = 'Password must be at least 8 characters';
+        if (formData.email?.trim() && !validateEmail(formData.email)) stepErrors.email = 'Please enter a valid email';
+        break;
+      default:
+        break;
+    }
+    
+    return stepErrors;
+  };
+
+  const handleNextStep = () => {
+    const stepErrors = validateStep(currentStep);
+    if (Object.keys(stepErrors).length > 0) {
+      setErrors(stepErrors);
+      return;
+    }
+    setErrors({});
+    setCurrentStep(prev => prev + 1);
+  };
+
+  const handlePreviousStep = () => {
+    if (currentStep > 0) {
+      setCurrentStep(prev => prev - 1);
+    } else {
+      onClose();
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -215,6 +264,19 @@ const AddUserModal = ({ isOpen, onClose, onUserAdded }) => {
     }
   };
 
+  // Prevent background scrolling when modal is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen]);
+
   useEffect(() => {
     if (!isOpen) resetForm();
   }, [isOpen, resetForm]);
@@ -222,70 +284,72 @@ const AddUserModal = ({ isOpen, onClose, onUserAdded }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 animate-fade-in">
-      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden animate-slide-up">
-        {/* Header */}
-        <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-6 border-b border-gray-100">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <div className="p-3 bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl">
-                <UserPlus className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h3 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                  Add New Team Member
-                </h3>
-                <p className="text-gray-600">Create a new user account for Jump 'n Joy</p>
-              </div>
-            </div>
-            <button 
-              onClick={onClose}
-              className="p-2 text-gray-400 hover:text-gray-600 hover:bg-white hover:shadow-md rounded-xl transition-all duration-300"
-            >
-              <X className="w-6 h-6" />
-            </button>
-          </div>
-
-          {/* Progress Steps */}
-          <div className="flex items-center justify-center mt-6 space-x-4">
-            {steps.map((step, index) => {
-              const StepIcon = step.icon;
-              return (
-                <div key={index} className="flex items-center">
-                  <div className={`flex items-center space-x-2 px-4 py-2 rounded-xl transition-all duration-300 ${
-                    index <= currentStep 
-                      ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg scale-105' 
-                      : 'bg-white text-gray-400 border-2 border-gray-200'
-                  }`}>
-                    <StepIcon className="w-4 h-4" />
-                    <span className="text-sm font-medium">{step.title}</span>
-                  </div>
-                  {index < steps.length - 1 && (
-                    <div className={`w-8 h-0.5 mx-2 transition-colors duration-300 ${
-                      index < currentStep ? 'bg-gradient-to-r from-blue-500 to-purple-500' : 'bg-gray-200'
-                    }`} />
-                  )}
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 animate-fade-in overflow-y-auto">
+      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl my-8 animate-slide-up">
+        <form onSubmit={handleSubmit} className="flex flex-col">
+          {/* Header - Fixed */}
+          <div className="flex-shrink-0 bg-gradient-to-r from-blue-50 to-purple-50 p-6 border-b border-gray-100">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <div className="p-3 bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl">
+                  <UserPlus className="w-6 h-6 text-white" />
                 </div>
-              );
-            })}
-          </div>
-        </div>
+                <div>
+                  <h3 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                    Add New Team Member
+                  </h3>
+                  <p className="text-gray-600">Create a new user account for Jump 'n Joy</p>
+                </div>
+              </div>
+              <button 
+                type="button"
+                onClick={onClose}
+                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-white hover:shadow-md rounded-xl transition-all duration-300"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
 
-        {errors.submit && (
-          <div className="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 m-6 rounded-lg animate-shake">
-            <div className="flex items-center">
-              <AlertCircle className="w-5 h-5 mr-2" />
-              <span className="font-medium">{errors.submit}</span>
+            {/* Progress Steps */}
+            <div className="flex items-center justify-center mt-6 space-x-4">
+              {steps.map((step, index) => {
+                const StepIcon = step.icon;
+                return (
+                  <div key={index} className="flex items-center">
+                    <div className={`flex items-center space-x-2 px-4 py-2 rounded-xl transition-all duration-300 ${
+                      index <= currentStep 
+                        ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg scale-105' 
+                        : 'bg-white text-gray-400 border-2 border-gray-200'
+                    }`}>
+                      <StepIcon className="w-4 h-4" />
+                      <span className="text-sm font-medium">{step.title}</span>
+                    </div>
+                    {index < steps.length - 1 && (
+                      <div className={`w-8 h-0.5 mx-2 transition-colors duration-300 ${
+                        index < currentStep ? 'bg-gradient-to-r from-blue-500 to-purple-500' : 'bg-gray-200'
+                      }`} />
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
-        )}
 
-        {/* Form Content */}
-        <div className="p-6 overflow-y-auto max-h-96">
-          <div onSubmit={handleSubmit} className="space-y-6">
+          {/* Error Message */}
+          {errors.submit && (
+            <div className="flex-shrink-0 bg-red-50 border-l-4 border-red-500 text-red-700 p-4 m-6 rounded-lg animate-shake">
+              <div className="flex items-center">
+                <AlertCircle className="w-5 h-5 mr-2" />
+                <span className="font-medium">{errors.submit}</span>
+              </div>
+            </div>
+          )}
+
+          {/* Form Content - Scrollable */}
+          <div className="flex-1 p-6 max-h-[60vh] overflow-y-auto">
             {/* Step 0: Personal Information */}
             {currentStep === 0 && (
-              <div className="animate-slide-in space-y-6">
+              <div className="space-y-6">
                 <div className="text-center mb-6">
                   <div className="w-20 h-20 bg-gradient-to-r from-blue-100 to-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
                     <Users className="w-10 h-10 text-blue-600" />
@@ -331,7 +395,7 @@ const AddUserModal = ({ isOpen, onClose, onUserAdded }) => {
 
             {/* Step 1: Account Details */}
             {currentStep === 1 && (
-              <div className="animate-slide-in space-y-6">
+              <div className="space-y-6">
                 <div className="text-center mb-6">
                   <div className="w-20 h-20 bg-gradient-to-r from-green-100 to-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
                     <Key className="w-10 h-10 text-green-600" />
@@ -387,7 +451,7 @@ const AddUserModal = ({ isOpen, onClose, onUserAdded }) => {
 
             {/* Step 2: Role & Permissions */}
             {currentStep === 2 && (
-              <div className="animate-slide-in space-y-6">
+              <div className="space-y-6">
                 <div className="text-center mb-6">
                   <div className="w-20 h-20 bg-gradient-to-r from-purple-100 to-pink-100 rounded-full flex items-center justify-center mx-auto mb-4">
                     <Shield className="w-10 h-10 text-purple-600" />
@@ -449,51 +513,49 @@ const AddUserModal = ({ isOpen, onClose, onUserAdded }) => {
               </div>
             )}
           </div>
-        </div>
 
-        {/* Footer */}
-        <div className="bg-gray-50 px-6 py-4 flex justify-between items-center border-t border-gray-200">
-          <button
-            type="button"
-            onClick={() => currentStep > 0 ? setCurrentStep(currentStep - 1) : onClose()}
-            className="flex items-center space-x-2 px-4 py-2 text-gray-700 border border-gray-300 rounded-xl hover:bg-white hover:shadow-md transition-all duration-300"
-          >
-            <span>{currentStep === 0 ? 'Cancel' : 'Back'}</span>
-          </button>
-
-          {currentStep < steps.length - 1 ? (
+          {/* Footer - Fixed */}
+          <div className="flex-shrink-0 bg-gray-50 px-6 py-4 flex justify-between items-center border-t border-gray-200">
             <button
               type="button"
-              onClick={() => setCurrentStep(currentStep + 1)}
-              disabled={
-                (currentStep === 0 && (!formData.first_name || !formData.last_name)) ||
-                (currentStep === 1 && (!formData.username || !formData.password))
-              }
-              className="flex items-center space-x-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white px-6 py-2 rounded-xl hover:from-blue-600 hover:to-purple-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105 shadow-lg"
+              onClick={handlePreviousStep}
+              className="flex items-center space-x-2 px-6 py-3 text-gray-700 border border-gray-300 rounded-xl hover:bg-white hover:shadow-md transition-all duration-300"
             >
-              <span>Next</span>
+              <ArrowLeft className="w-5 h-5" />
+              <span>{currentStep === 0 ? 'Cancel' : 'Back'}</span>
             </button>
-          ) : (
-            <button
-              onClick={handleSubmit}
-              disabled={loading}
-              className="flex items-center space-x-2 bg-gradient-to-r from-green-500 to-blue-500 text-white px-6 py-2 rounded-xl hover:from-green-600 hover:to-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105 shadow-lg"
-            >
-              {loading ? (
-                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-              ) : (
-                <Save className="w-5 h-5" />
-              )}
-              <span>{loading ? 'Creating...' : 'Create User'}</span>
-            </button>
-          )}
-        </div>
+
+            {currentStep < steps.length - 1 ? (
+              <button
+                type="button"
+                onClick={handleNextStep}
+                className="flex items-center space-x-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white px-6 py-3 rounded-xl hover:from-blue-600 hover:to-purple-600 transition-all duration-300 transform hover:scale-105 shadow-lg"
+              >
+                <span>Next Step</span>
+                <ArrowRight className="w-5 h-5" />
+              </button>
+            ) : (
+              <button
+                type="submit"
+                disabled={loading}
+                className="flex items-center space-x-2 bg-gradient-to-r from-green-500 to-blue-500 text-white px-6 py-3 rounded-xl hover:from-green-600 hover:to-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105 shadow-lg"
+              >
+                {loading ? (
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                ) : (
+                  <Save className="w-5 h-5" />
+                )}
+                <span>{loading ? 'Creating User...' : 'Create User'}</span>
+              </button>
+            )}
+          </div>
+        </form>
       </div>
     </div>
   );
 };
 
-// Edit User Modal Component
+// Enhanced Edit User Modal Component with proper scroll handling
 const EditUserModal = ({ user, isOpen, onClose, onUserUpdated }) => {
   const [formData, setFormData] = useState(INITIAL_FORM_DATA);
   const [loading, setLoading] = useState(false);
@@ -507,8 +569,8 @@ const EditUserModal = ({ user, isOpen, onClose, onUserUpdated }) => {
         email: user.email || '',
         first_name: user.first_name || '',
         last_name: user.last_name || '',
-        password: '', // Don't pre-fill password for security
-        role: user.role || 'staff',
+        password: '',
+        role: user.role || 'marshal',
         phone: user.phone || '',
         is_active: user.is_active !== undefined ? user.is_active : true
       });
@@ -531,7 +593,6 @@ const EditUserModal = ({ user, isOpen, onClose, onUserUpdated }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // For edit mode, password is optional
     const formErrors = validateForm(formData, true);
     if (Object.keys(formErrors).length > 0) {
       setErrors(formErrors);
@@ -540,7 +601,6 @@ const EditUserModal = ({ user, isOpen, onClose, onUserUpdated }) => {
     
     setLoading(true);
     try {
-      // Prepare data for update - remove password if empty
       const updateData = { ...formData };
       if (!updateData.password) {
         delete updateData.password;
@@ -556,6 +616,19 @@ const EditUserModal = ({ user, isOpen, onClose, onUserUpdated }) => {
     }
   };
 
+  // Prevent background scrolling when modal is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen]);
+
   useEffect(() => {
     if (isOpen && user) {
       resetForm();
@@ -567,60 +640,62 @@ const EditUserModal = ({ user, isOpen, onClose, onUserUpdated }) => {
   const avatarColor = generateAvatarColor(user.first_name + user.last_name);
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 animate-fade-in">
-      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden animate-slide-up">
-        {/* Header */}
-        <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-6 border-b border-gray-100">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <div className="p-3 bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl">
-                <Edit className="w-6 h-6 text-white" />
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 animate-fade-in overflow-y-auto">
+      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl my-8 animate-slide-up">
+        <form onSubmit={handleSubmit} className="flex flex-col">
+          {/* Header - Fixed */}
+          <div className="flex-shrink-0 bg-gradient-to-r from-blue-50 to-purple-50 p-6 border-b border-gray-100">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <div className="p-3 bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl">
+                  <Edit className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                    Edit Team Member
+                  </h3>
+                  <p className="text-gray-600">Update user account for Jump 'n Joy</p>
+                </div>
+              </div>
+              <button 
+                type="button"
+                onClick={onClose}
+                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-white hover:shadow-md rounded-xl transition-all duration-300"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            {/* User Preview */}
+            <div className="flex items-center space-x-4 mt-6 p-4 bg-white rounded-2xl border border-gray-200">
+              <div className={`w-16 h-16 bg-gradient-to-r ${avatarColor} rounded-full flex items-center justify-center shadow-lg`}>
+                <span className="text-white font-bold text-lg">
+                  {generateInitials(user.first_name, user.last_name)}
+                </span>
               </div>
               <div>
-                <h3 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                  Edit Team Member
-                </h3>
-                <p className="text-gray-600">Update user account for Jump 'n Joy</p>
+                <h4 className="text-lg font-bold text-gray-900">
+                  {user.first_name} {user.last_name}
+                </h4>
+                <p className="text-gray-600">@{user.username}</p>
               </div>
             </div>
-            <button 
-              onClick={onClose}
-              className="p-2 text-gray-400 hover:text-gray-600 hover:bg-white hover:shadow-md rounded-xl transition-all duration-300"
-            >
-              <X className="w-6 h-6" />
-            </button>
           </div>
 
-          {/* User Preview */}
-          <div className="flex items-center space-x-4 mt-6 p-4 bg-white rounded-2xl border border-gray-200">
-            <div className={`w-16 h-16 bg-gradient-to-r ${avatarColor} rounded-full flex items-center justify-center shadow-lg`}>
-              <span className="text-white font-bold text-lg">
-                {generateInitials(user.first_name, user.last_name)}
-              </span>
+          {/* Error Message */}
+          {errors.submit && (
+            <div className="flex-shrink-0 bg-red-50 border-l-4 border-red-500 text-red-700 p-4 m-6 rounded-lg animate-shake">
+              <div className="flex items-center">
+                <AlertCircle className="w-5 h-5 mr-2" />
+                <span className="font-medium">{errors.submit}</span>
+              </div>
             </div>
-            <div>
-              <h4 className="text-lg font-bold text-gray-900">
-                {user.first_name} {user.last_name}
-              </h4>
-              <p className="text-gray-600">@{user.username}</p>
-            </div>
-          </div>
-        </div>
+          )}
 
-        {errors.submit && (
-          <div className="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 m-6 rounded-lg animate-shake">
-            <div className="flex items-center">
-              <AlertCircle className="w-5 h-5 mr-2" />
-              <span className="font-medium">{errors.submit}</span>
-            </div>
-          </div>
-        )}
-
-        {/* Form Content */}
-        <div className="p-6 overflow-y-auto max-h-96">
-          <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Form Content - Scrollable */}
+          <div className="flex-1 p-6 max-h-[60vh] overflow-y-auto">
             {/* Personal Information */}
-            <div className="animate-slide-in space-y-6">
+            <div className="space-y-6">
               <div className="text-center mb-6">
                 <div className="w-20 h-20 bg-gradient-to-r from-blue-100 to-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Users className="w-10 h-10 text-blue-600" />
@@ -664,7 +739,7 @@ const EditUserModal = ({ user, isOpen, onClose, onUserUpdated }) => {
             </div>
 
             {/* Account Details */}
-            <div className="animate-slide-in space-y-6">
+            <div className="space-y-6 mt-8">
               <div className="text-center mb-6">
                 <div className="w-20 h-20 bg-gradient-to-r from-green-100 to-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Key className="w-10 h-10 text-green-600" />
@@ -720,7 +795,7 @@ const EditUserModal = ({ user, isOpen, onClose, onUserUpdated }) => {
             </div>
 
             {/* Role & Permissions */}
-            <div className="animate-slide-in space-y-6">
+            <div className="space-y-6 mt-8">
               <div className="text-center mb-6">
                 <div className="w-20 h-20 bg-gradient-to-r from-purple-100 to-pink-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Shield className="w-10 h-10 text-purple-600" />
@@ -780,30 +855,57 @@ const EditUserModal = ({ user, isOpen, onClose, onUserUpdated }) => {
                 </label>
               </div>
             </div>
-          </form>
-        </div>
+          </div>
 
-        {/* Footer */}
-        <div className="bg-gray-50 px-6 py-4 flex justify-between items-center border-t border-gray-200">
+          {/* Footer - Fixed */}
+          <div className="flex-shrink-0 bg-gray-50 px-6 py-4 flex justify-between items-center border-t border-gray-200">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex items-center space-x-2 px-6 py-3 text-gray-700 border border-gray-300 rounded-xl hover:bg-white hover:shadow-md transition-all duration-300"
+            >
+              <X className="w-5 h-5" />
+              <span>Cancel</span>
+            </button>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="flex items-center space-x-2 bg-gradient-to-r from-green-500 to-blue-500 text-white px-6 py-3 rounded-xl hover:from-green-600 hover:to-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105 shadow-lg"
+            >
+              {loading ? (
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              ) : (
+                <Save className="w-5 h-5" />
+              )}
+              <span>{loading ? 'Updating...' : 'Update User'}</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+// Success Notification Component
+const SuccessNotification = ({ message, isVisible, onClose }) => {
+  if (!isVisible) return null;
+
+  return (
+    <div className="fixed top-4 right-4 z-50 animate-slide-in">
+      <div className="bg-gradient-to-r from-green-500 to-emerald-500 text-white p-4 rounded-2xl shadow-2xl border-l-4 border-emerald-600 max-w-sm">
+        <div className="flex items-center space-x-3">
+          <div className="flex-shrink-0">
+            <CheckCircle className="w-6 h-6" />
+          </div>
+          <div className="flex-1">
+            <p className="font-medium">{message}</p>
+          </div>
           <button
-            type="button"
             onClick={onClose}
-            className="flex items-center space-x-2 px-6 py-2 text-gray-700 border border-gray-300 rounded-xl hover:bg-white hover:shadow-md transition-all duration-300"
+            className="flex-shrink-0 text-white hover:text-green-100 transition-colors duration-300"
           >
-            <span>Cancel</span>
-          </button>
-
-          <button
-            onClick={handleSubmit}
-            disabled={loading}
-            className="flex items-center space-x-2 bg-gradient-to-r from-green-500 to-blue-500 text-white px-6 py-2 rounded-xl hover:from-green-600 hover:to-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105 shadow-lg"
-          >
-            {loading ? (
-              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-            ) : (
-              <Save className="w-5 h-5" />
-            )}
-            <span>{loading ? 'Updating...' : 'Update User'}</span>
+            <X className="w-5 h-5" />
           </button>
         </div>
       </div>
@@ -811,7 +913,119 @@ const EditUserModal = ({ user, isOpen, onClose, onUserUpdated }) => {
   );
 };
 
+// Delete Confirmation Modal Component with proper scroll handling
+const DeleteConfirmationModal = ({ 
+  isOpen, 
+  onClose, 
+  onConfirm, 
+  user, 
+  loading = false 
+}) => {
+  // Prevent background scrolling when modal is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen]);
+
+  if (!isOpen || !user) return null;
+
+  const avatarColor = generateAvatarColor(user.first_name + user.last_name);
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 animate-fade-in overflow-y-auto">
+      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md my-8 animate-slide-up">
+        {/* Header with warning gradient */}
+        <div className="bg-gradient-to-r from-red-50 to-orange-50 p-6 text-center border-b border-red-100">
+          <div className="w-20 h-20 bg-gradient-to-r from-red-500 to-orange-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
+            <AlertTriangle className="w-10 h-10 text-white" />
+          </div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Delete Team Member</h2>
+          <p className="text-gray-600">This action cannot be undone</p>
+        </div>
+
+        {/* User Info */}
+        <div className="p-6 text-center">
+          <div className={`w-16 h-16 bg-gradient-to-r ${avatarColor} rounded-full flex items-center justify-center mx-auto mb-4`}>
+            <span className="text-white font-bold text-lg">
+              {generateInitials(user.first_name, user.last_name)}
+            </span>
+          </div>
+          <h3 className="text-lg font-bold text-gray-900 mb-1">
+            {user.first_name} {user.last_name}
+          </h3>
+          <p className="text-gray-600 mb-4">@{user.username}</p>
+          
+          <div className="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 rounded-lg text-left">
+            <div className="flex items-start">
+              <AlertTriangle className="w-5 h-5 mr-2 mt-0.5 flex-shrink-0" />
+              <div>
+                <p className="font-medium">Warning: This will permanently delete</p>
+                <ul className="text-sm mt-1 space-y-1">
+                  <li>• User account and all associated data</li>
+                  <li>• Login access for this team member</li>
+                  <li>• Any permissions and settings</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Actions */}
+        <div className="bg-gray-50 px-6 py-4 flex space-x-3 border-t border-gray-200">
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={loading}
+            className="flex-1 px-4 py-3 text-gray-700 border border-gray-300 rounded-xl hover:bg-white hover:shadow-md transition-all duration-300 disabled:opacity-50"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={onConfirm}
+            disabled={loading}
+            className="flex-1 px-4 py-3 bg-gradient-to-r from-red-500 to-orange-500 text-white rounded-xl hover:from-red-600 hover:to-orange-600 transition-all duration-300 transform hover:scale-105 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+          >
+            {loading ? (
+              <>
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                <span>Deleting...</span>
+              </>
+            ) : (
+              <>
+                <Trash2 className="w-5 h-5" />
+                <span>Delete User</span>
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// User Details Modal Component with proper scroll handling
 const UserDetailsModal = ({ user, isOpen, onClose, onEdit }) => {
+  // Prevent background scrolling when modal is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen]);
+
   if (!isOpen || !user) return null;
 
   const roleInfo = getRoleInfo(user.role);
@@ -819,8 +1033,8 @@ const UserDetailsModal = ({ user, isOpen, onClose, onEdit }) => {
   const RoleIcon = roleInfo.icon;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 animate-fade-in">
-      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md animate-slide-up overflow-hidden">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 animate-fade-in overflow-y-auto">
+      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md my-8 animate-slide-up">
         {/* Header with gradient background */}
         <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-6 text-center border-b border-gray-100">
           <div className={`w-24 h-24 bg-gradient-to-r ${avatarColor} rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg animate-bounce-gentle`}>
@@ -846,7 +1060,7 @@ const UserDetailsModal = ({ user, isOpen, onClose, onEdit }) => {
         </div>
 
         {/* Details */}
-        <div className="p-6 space-y-4">
+        <div className="p-6 space-y-4 max-h-[60vh] overflow-y-auto">
           {user.email && (
             <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors duration-300">
               <div className="p-2 bg-blue-100 rounded-lg">
@@ -899,125 +1113,18 @@ const UserDetailsModal = ({ user, isOpen, onClose, onEdit }) => {
         {/* Actions */}
         <div className="bg-gray-50 px-6 py-4 flex space-x-3 border-t border-gray-200">
           <button
+            type="button"
             onClick={onClose}
             className="flex-1 px-4 py-2 text-gray-700 border border-gray-300 rounded-xl hover:bg-white hover:shadow-md transition-all duration-300"
           >
             Close
           </button>
           <button 
+            type="button"
             onClick={() => onEdit(user)}
             className="flex-1 px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-xl hover:from-blue-600 hover:to-purple-600 transition-all duration-300 transform hover:scale-105 shadow-lg"
           >
             Edit User
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// Delete Confirmation Modal Component
-const DeleteConfirmationModal = ({ 
-  isOpen, 
-  onClose, 
-  onConfirm, 
-  user, 
-  loading = false 
-}) => {
-  if (!isOpen || !user) return null;
-
-  const avatarColor = generateAvatarColor(user.first_name + user.last_name);
-
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 animate-fade-in">
-      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md animate-slide-up overflow-hidden">
-        {/* Header with warning gradient */}
-        <div className="bg-gradient-to-r from-red-50 to-orange-50 p-6 text-center border-b border-red-100">
-          <div className="w-20 h-20 bg-gradient-to-r from-red-500 to-orange-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
-            <AlertTriangle className="w-10 h-10 text-white" />
-          </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Delete Team Member</h2>
-          <p className="text-gray-600">This action cannot be undone</p>
-        </div>
-
-        {/* User Info */}
-        <div className="p-6 text-center">
-          <div className={`w-16 h-16 bg-gradient-to-r ${avatarColor} rounded-full flex items-center justify-center mx-auto mb-4`}>
-            <span className="text-white font-bold text-lg">
-              {generateInitials(user.first_name, user.last_name)}
-            </span>
-          </div>
-          <h3 className="text-lg font-bold text-gray-900 mb-1">
-            {user.first_name} {user.last_name}
-          </h3>
-          <p className="text-gray-600 mb-4">@{user.username}</p>
-          
-          <div className="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 rounded-lg text-left">
-            <div className="flex items-start">
-              <AlertTriangle className="w-5 h-5 mr-2 mt-0.5 flex-shrink-0" />
-              <div>
-                <p className="font-medium">Warning: This will permanently delete</p>
-                <ul className="text-sm mt-1 space-y-1">
-                  <li>• User account and all associated data</li>
-                  <li>• Login access for this team member</li>
-                  <li>• Any permissions and settings</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Actions */}
-        <div className="bg-gray-50 px-6 py-4 flex space-x-3 border-t border-gray-200">
-          <button
-            onClick={onClose}
-            disabled={loading}
-            className="flex-1 px-4 py-3 text-gray-700 border border-gray-300 rounded-xl hover:bg-white hover:shadow-md transition-all duration-300 disabled:opacity-50"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={onConfirm}
-            disabled={loading}
-            className="flex-1 px-4 py-3 bg-gradient-to-r from-red-500 to-orange-500 text-white rounded-xl hover:from-red-600 hover:to-orange-600 transition-all duration-300 transform hover:scale-105 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
-          >
-            {loading ? (
-              <>
-                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                <span>Deleting...</span>
-              </>
-            ) : (
-              <>
-                <Trash2 className="w-5 h-5" />
-                <span>Delete User</span>
-              </>
-            )}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// Success Notification Component
-const SuccessNotification = ({ message, isVisible, onClose }) => {
-  if (!isVisible) return null;
-
-  return (
-    <div className="fixed top-4 right-4 z-50 animate-slide-in">
-      <div className="bg-gradient-to-r from-green-500 to-emerald-500 text-white p-4 rounded-2xl shadow-2xl border-l-4 border-emerald-600 max-w-sm">
-        <div className="flex items-center space-x-3">
-          <div className="flex-shrink-0">
-            <CheckCircle className="w-6 h-6" />
-          </div>
-          <div className="flex-1">
-            <p className="font-medium">{message}</p>
-          </div>
-          <button
-            onClick={onClose}
-            className="flex-shrink-0 text-white hover:text-green-100 transition-colors duration-300"
-          >
-            <X className="w-5 h-5" />
           </button>
         </div>
       </div>
@@ -1047,7 +1154,6 @@ const UserManagementContent = () => {
       setLoading(true);
       setError(null);
       const response = await apiService.getUsers();
-      // Extracts results array from the API response
       const usersData = response.results || [];
       setUsers(Array.isArray(usersData) ? usersData : []);
     } catch (err) {
@@ -1065,10 +1171,14 @@ const UserManagementContent = () => {
 
   const handleUserAdded = useCallback(() => {
     fetchUsers();
+    setShowSuccessNotification(true);
+    setTimeout(() => setShowSuccessNotification(false), 3000);
   }, [fetchUsers]);
 
   const handleUserUpdated = useCallback(() => {
     fetchUsers();
+    setShowSuccessNotification(true);
+    setTimeout(() => setShowSuccessNotification(false), 3000);
   }, [fetchUsers]);
 
   const handleDeleteClick = (user) => {
@@ -1082,22 +1192,11 @@ const UserManagementContent = () => {
     setDeleteLoading(true);
     try {
       await apiService.deleteUser(userToDelete.id);
-      
-      // Show success notification
       setShowSuccessNotification(true);
-      
-      // Close delete modal
       setIsDeleteModalOpen(false);
       setUserToDelete(null);
-      
-      // Refresh users list
       fetchUsers();
-      
-      // Auto-hide success notification after 3 seconds
-      setTimeout(() => {
-        setShowSuccessNotification(false);
-      }, 3000);
-      
+      setTimeout(() => setShowSuccessNotification(false), 3000);
     } catch (error) {
       console.error('Error deleting user:', error);
       alert('Failed to delete user: ' + error.message);
@@ -1142,8 +1241,8 @@ const UserManagementContent = () => {
   const stats = {
     total: users.length,
     active: users.filter(u => u.is_active).length,
-    inactive: users.filter(u => !u.is_active).length,
-    admin: users.filter(u => u.role === 'admin').length,
+    cafe: users.filter(u => u.role === 'cafe').length,
+    marshal: users.filter(u => u.role === 'marshal').length,
     owner: users.filter(u => u.role === 'owner').length
   };
 
@@ -1151,7 +1250,7 @@ const UserManagementContent = () => {
     <div className="space-y-8 animate-fade-in">
       {/* Success Notification */}
       <SuccessNotification
-        message="Team member deleted successfully"
+        message="Operation completed successfully"
         isVisible={showSuccessNotification}
         onClose={() => setShowSuccessNotification(false)}
       />
@@ -1201,15 +1300,15 @@ const UserManagementContent = () => {
             <p className="text-sm text-green-600">Ready to work</p>
           </div>
 
-          <div className="p-6 bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl border border-purple-200 hover:shadow-lg transition-all duration-300 hover:scale-105">
+          <div className="p-6 bg-gradient-to-br from-orange-50 to-orange-100 rounded-2xl border border-orange-200 hover:shadow-lg transition-all duration-300 hover:scale-105">
             <div className="flex items-center justify-between mb-3">
-              <div className="p-3 bg-purple-500 rounded-xl shadow-lg">
-                <Shield className="w-6 h-6 text-white" />
+              <div className="p-3 bg-orange-500 rounded-xl shadow-lg">
+                <Coffee className="w-6 h-6 text-white" />
               </div>
-              <span className="text-3xl font-bold text-purple-600">{stats.admin}</span>
+              <span className="text-3xl font-bold text-orange-600">{stats.cafe}</span>
             </div>
-            <h3 className="font-semibold text-gray-900">Admins</h3>
-            <p className="text-sm text-purple-600">System managers</p>
+            <h3 className="font-semibold text-gray-900">Cafe Staff</h3>
+            <p className="text-sm text-orange-600">Food & beverage</p>
           </div>
 
           <div className="p-6 bg-gradient-to-br from-yellow-50 to-orange-100 rounded-2xl border border-orange-200 hover:shadow-lg transition-all duration-300 hover:scale-105">

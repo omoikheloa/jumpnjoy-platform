@@ -16,7 +16,10 @@ class User(AbstractUser):
     """
     ROLE_CHOICES = [
         ('owner', 'Owner'),
-        ('staff', 'Staff'),
+        ('marshal', 'Marshal'),
+        ('reception', 'Reception'),
+        ('party_host', 'Party Host'),
+        ('cafe', 'Cafe'),
     ]
     role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='staff')
     phone = models.CharField(max_length=20, blank=True)

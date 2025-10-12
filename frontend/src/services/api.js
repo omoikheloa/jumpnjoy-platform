@@ -100,7 +100,7 @@ class ApiService {
     }
   }
 
-  // Handle response method for compatibility with second file
+  // Handle response method for compatibility
   async handleResponse(response) {
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
@@ -205,32 +205,47 @@ class ApiService {
     return this.get(`/cafe-checklists/?date=${date}`);
   }
 
-  // Daily Inspection API methods
+  // =========================================================================
+  // DAILY INSPECTION API METHODS - UPDATED TO MATCH YOUR DJANGO BACKEND
+  // =========================================================================
+
+  // Check if user has already submitted an inspection for today
+  async checkDailySubmission(date) {
+    try {
+      // Use the daily-inspections endpoint with date filter
+      const response = await this.get(`/daily-inspections/?date=${date}`);
+      
+      // Check if current user has any submissions for today
+      const submissions = response.results || response;
+      const userSubmissions = submissions.filter(submission => 
+        submission.checked_by === this.user?.id
+      );
+      
+      return {
+        hasSubmitted: userSubmissions.length > 0,
+        existingSubmission: userSubmissions[0] || null
+      };
+    } catch (error) {
+      console.error('Error checking daily submission:', error);
+      return { hasSubmitted: false };
+    }
+  }
+
   async getDailyInspections(params = {}) {
     const queryString = new URLSearchParams(params).toString();
-    const url = `${this.baseURL}/safety/daily-inspections/${queryString ? `?${queryString}` : ''}`;
-    
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: this.getHeaders(),
-    });
-    
-    return this.handleResponse(response);
+    return this.get(`/daily-inspections/${queryString ? `?${queryString}` : ''}`);
   }
 
   async getDailyInspection(id) {
-    const response = await fetch(`${this.baseURL}/safety/daily-inspections/${id}/`, {
-      method: 'GET',
-      headers: this.getHeaders(),
-    });
-    
-    return this.handleResponse(response);
+    return this.get(`/daily-inspections/${id}/`);
   }
 
   async createDailyInspection(data) {
-    // Transform the frontend data structure to match the API
-    const today = new Date().toISOString().split("T")[0]; // "2025-09-04"
+    // Transform frontend data structure to match Django API
+    const today = new Date().toISOString().split("T")[0];
+    
     const apiData = {
+      date: today,
       wc_number: data.wc_number || '',
       inspector_initials: data.inspector_initials,
       manager_initials: data.manager_initials,
@@ -255,26 +270,16 @@ class ApiService {
       trip_hazards: data.inspection_results?.INS017 || 'pass',
       staff_availability: data.inspection_results?.INS018 || 'pass',
       
-      // Include remedial notes
-      remedial_notes: data.remedial_notes || {},
-      checked_by: this.user?.id || null,
-      date: today
+      // Include remedial notes for automatic RemedialAction creation
+      remedial_notes: data.remedial_notes || {}
     };
 
-    const response = await fetch(`${this.baseURL}/daily-inspections/`, {
-      method: 'POST',
-      headers: this.getHeaders(),
-      body: JSON.stringify(apiData),
-    });
-    
-    return this.handleResponse(response);
+    return this.post('/daily-inspections/', apiData);
   }
 
   async updateDailyInspection(id, data) {
-    // Transform the frontend data structure to match the API
     const apiData = {
       wc_number: data.wc_number || '',
-      inspection_day: data.inspection_day,
       inspector_initials: data.inspector_initials,
       manager_initials: data.manager_initials,
       
@@ -302,116 +307,122 @@ class ApiService {
       remedial_notes: data.remedial_notes || {}
     };
 
-    const response = await fetch(`${this.baseURL}/daily-inspections/${id}/`, {
-      method: 'PUT',
-      headers: this.getHeaders(),
-      body: JSON.stringify(apiData),
-    });
-    
-    return this.handleResponse(response);
+    return this.put(`/daily-inspections/${id}/`, apiData);
   }
 
   async deleteDailyInspection(id) {
-    const response = await fetch(`${this.baseURL}/safety/daily-inspections/${id}/`, {
-      method: 'DELETE',
-      headers: this.getHeaders(),
-    });
-    
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
+    return this.delete(`/daily-inspections/${id}/`);
   }
 
-  // Remedial Action API methods
+  // =========================================================================
+  // REMEDIAL ACTION API METHODS
+  // =========================================================================
+
   async getRemedialActions(params = {}) {
     const queryString = new URLSearchParams(params).toString();
-    const url = `${this.baseURL}/safety/remedial-actions/${queryString ? `?${queryString}` : ''}`;
-    
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: this.getHeaders(),
-    });
-    
-    return this.handleResponse(response);
+    return this.get(`/remedial-actions/${queryString ? `?${queryString}` : ''}`);
   }
 
   async getRemedialAction(id) {
-    const response = await fetch(`${this.baseURL}/safety/remedial-actions/${id}/`, {
-      method: 'GET',
-      headers: this.getHeaders(),
-    });
-    
-    return this.handleResponse(response);
+    return this.get(`/remedial-actions/${id}/`);
   }
 
   async createRemedialAction(data) {
-    const response = await fetch(`${this.baseURL}/safety/remedial-actions/`, {
-      method: 'POST',
-      headers: this.getHeaders(),
-      body: JSON.stringify(data),
-    });
-    
-    return this.handleResponse(response);
+    return this.post('/remedial-actions/', data);
   }
 
   async updateRemedialAction(id, data) {
-    const response = await fetch(`${this.baseURL}/safety/remedial-actions/${id}/`, {
-      method: 'PUT',
-      headers: this.getHeaders(),
-      body: JSON.stringify(data),
-    });
-    
-    return this.handleResponse(response);
+    return this.put(`/remedial-actions/${id}/`, data);
   }
 
   async deleteRemedialAction(id) {
-    const response = await fetch(`${this.baseURL}/safety/remedial-actions/${id}/`, {
-      method: 'DELETE',
-      headers: this.getHeaders(),
+    return this.delete(`/remedial-actions/${id}/`);
+  }
+
+  // =========================================================================
+  // INSPECTION DASHBOARD API METHODS
+  // =========================================================================
+
+  async getInspectionDashboard(params = {}) {
+    const queryString = new URLSearchParams(params).toString();
+    return this.get(`/safety/inspection-dashboard/${queryString ? `?${queryString}` : ''}`);
+  }
+
+  // =========================================================================
+  // INCIDENT REPORT API METHODS
+  // =========================================================================
+
+  async getIncidents(params = {}) {
+    const queryString = new URLSearchParams(params).toString();
+    const response = await this.get(`/incidents/${queryString ? `?${queryString}` : ''}`);
+    console.log('Raw incidents API response:', response);
+    return response;
+  }
+
+  async getIncident(id) {
+    return this.get(`/incidents/${id}/`);
+  }
+
+  async createIncident(formData) {
+    const response = await fetch(`${this.baseURL}/incidents/`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Token ${this.token}`,
+      },
+      body: formData,
     });
     
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      const errorData = await response.json();
+      throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
     }
+    
+    return await response.json();
   }
 
-  // Dashboard API method
-  async getInspectionDashboard(params = {}) {
-    const queryString = new URLSearchParams(params).toString();
-    const url = `${this.baseURL}/safety/dashboard/${queryString ? `?${queryString}` : ''}`;
-    
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: this.getHeaders(),
+  async updateIncident(id, formData) {
+    const response = await fetch(`${this.baseURL}/incidents/${id}/`, {
+      method: 'PATCH',
+      headers: {
+        'Authorization': `Token ${this.token}`,
+      },
+      body: formData,
     });
     
-    return this.handleResponse(response);
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+    }
+    
+    return await response.json();
   }
 
-  // Backward compatibility - Simple Safety Checks
+  async deleteIncident(id) {
+    return this.delete(`/incidents/${id}/`);
+  }
+
+  // Get incidents for current user
+  async getUserIncidents() {
+    return this.get('/incidents/my-reports/');
+  }
+
+  // =========================================================================
+  // SAFETY CHECK API METHODS (Legacy/Simple Safety Checks)
+  // =========================================================================
+
   async getSafetyChecks(params = {}) {
     const queryString = new URLSearchParams(params).toString();
-    const url = `${this.baseURL}/safety/safety-checks/${queryString ? `?${queryString}` : ''}`;
-    
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: this.getHeaders(),
-    });
-    
-    return this.handleResponse(response);
+    return this.get(`/safety/safety-checks/${queryString ? `?${queryString}` : ''}`);
   }
 
   async createSafetyCheck(data) {
-    const response = await fetch(`${this.baseURL}/safety/safety-checks/`, {
-      method: 'POST',
-      headers: this.getHeaders(),
-      body: JSON.stringify(data),
-    });
-    
-    return this.handleResponse(response);
+    return this.post('/safety/safety-checks/', data);
   }
 
-  // Utility methods for data transformation
+  // =========================================================================
+  // UTILITY METHODS FOR DATA TRANSFORMATION
+  // =========================================================================
+
   transformInspectionToFrontend(apiData) {
     // Transform API response back to frontend format
     const inspectionResults = {
@@ -477,10 +488,6 @@ class ApiService {
       errors.push('Manager initials are required');
     }
 
-    if (!data.inspection_day) {
-      errors.push('Inspection day is required');
-    }
-
     // Check if failed/remedial items have notes
     const results = data.inspection_results || {};
     const notes = data.remedial_notes || {};
@@ -503,12 +510,14 @@ class ApiService {
     return !!this.token;
   }
 
-    // Waiver Dashboard
+  // =========================================================================
+  // WAIVER MANAGEMENT API METHODS
+  // =========================================================================
+
   async getWaiverDashboardStats() {
     return this.get('/dashboard/stats/');
   }
 
-  // Waiver Sessions
   async getWaiverSessions() {
     return this.get('/waiver-sessions/');
   }
@@ -517,7 +526,6 @@ class ApiService {
     return this.post('/waiver-sessions/', data);
   }
 
-  // Waivers
   async getWaivers(search = '') {
     const params = new URLSearchParams();
     if (search) params.append('search', search);
