@@ -1,12 +1,17 @@
-[Unit]
-Description=Gunicorn daemon for Django project
-After=network.target
+server {
+    listen 80;
+    server_name _;
 
-[Service]
-User=your_username
-Group=www-data
-WorkingDirectory=/home/your_username/myapp/yourrepo/backend
-ExecStart=/home/your_username/myapp/yourrepo/backend/venv/bin/gunicorn --workers 3 --bind unix:/home/your_username/myapp/yourrepo/backend.sock yourproject.wsgi:application
+    location /static/ {
+        alias /home/your_username/myapp/yourrepo/backend/static/;
+    }
 
-[Install]
-WantedBy=multi-user.target
+    location /media/ {
+        alias /home/your_username/myapp/yourrepo/backend/media/;
+    }
+
+    location / {
+        include proxy_params;
+        proxy_pass http://unix:/home/your_username/myapp/yourrepo/backend.sock;
+    }
+}
