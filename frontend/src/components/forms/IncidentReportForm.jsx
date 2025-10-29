@@ -2,8 +2,8 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import SignatureCanvas from 'react-signature-canvas';
 import apiService from '../../services/api';
+import jsPDF from 'jspdf';
 
-// Move form components outside the main component to prevent re-renders
 const FormSection = ({ title, children, columns = 2 }) => (
   <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
     <h3 className="text-xl font-semibold text-gray-800 mb-4 pb-2 border-b border-gray-200">
@@ -96,8 +96,15 @@ const dataURLtoBlob = (dataURL) => {
   if (!dataURL) return null;
   
   try {
-    const byteString = atob(dataURL.split(',')[1]);
-    const mimeString = dataURL.split(',')[0].split(':')[1].split(';')[0];
+    let base64Data;
+    if (dataURL.startsWith('data:')) {
+      base64Data = dataURL.split(',')[1];
+    } else {
+      base64Data = dataURL;
+    }
+    
+    const byteString = atob(base64Data);
+    const mimeString = dataURL.startsWith('data:') ? dataURL.split(',')[0].split(':')[1].split(';')[0] : 'image/png';
     const ab = new ArrayBuffer(byteString.length);
     const ia = new Uint8Array(ab);
     
@@ -120,6 +127,12 @@ const formatTimeForServer = (timeString) => {
     return `${timeString}:00`;
   }
   return timeString;
+};
+
+const formatDateForDisplay = (dateString) => {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  return date.toLocaleDateString('en-GB');
 };
 
 const IncidentReportForm = ({ onFormSubmit }) => {
@@ -179,8 +192,10 @@ const IncidentReportForm = ({ onFormSubmit }) => {
   const [message, setMessage] = useState({ text: '', type: '' });
   const [mode, setMode] = useState(id ? 'edit' : 'create');
   const [fieldErrors, setFieldErrors] = useState({});
+  const [signatureLoaded, setSignatureLoaded] = useState(false);
   
   const sigCanvas = useRef(null);
+  const formRef = useRef(null);
 
   // Load incident data if editing
   useEffect(() => {
@@ -189,8 +204,28 @@ const IncidentReportForm = ({ onFormSubmit }) => {
     }
   }, [id]);
 
+  useEffect(() => {
+    if (formData.first_aider_signature && sigCanvas.current && !signatureLoaded) {
+      const timer = setTimeout(() => {
+        try {
+          let signatureData = formData.first_aider_signature;
+          if (!signatureData.startsWith('data:')) {
+            signatureData = `data:image/png;base64,${signatureData}`;
+          }
+          sigCanvas.current.fromDataURL(signatureData);
+          setSignatureLoaded(true);
+        } catch (error) {
+          console.error('Error loading signature:', error);
+        }
+      }, 100);
+
+      return () => clearTimeout(timer);
+    }
+  }, [formData.first_aider_signature, sigCanvas.current, signatureLoaded]);
+
   const loadIncidentData = async (incidentId) => {
     setIsLoading(true);
+    setSignatureLoaded(false);
     try {
       const response = await apiService.getIncident(incidentId);
       const incidentData = response.data || response;
@@ -237,10 +272,16 @@ const IncidentReportForm = ({ onFormSubmit }) => {
         ...formattedData
       }));
       
-      // Load signature if it exists
-      if (formattedData.first_aider_signature && sigCanvas.current) {
-        sigCanvas.current.fromDataURL(formattedData.first_aider_signature);
+      if (formattedData.first_aider_signature) {
+        if (!formattedData.first_aider_signature.startsWith('data:')) {
+          formattedData.first_aider_signature = `data:image/png;base64,${formattedData.first_aider_signature}`;
+        }
       }
+
+      setFormData(prev => ({
+        ...prev,
+        ...formattedData
+      }));
       
       setMessage({ text: 'Form loaded successfully', type: 'success' });
     } catch (error) {
@@ -359,6 +400,205 @@ const IncidentReportForm = ({ onFormSubmit }) => {
     return true;
   };
 
+  const generateProfessionalPDF = () => {
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const margin = 20;
+    let yPosition = margin;
+
+    // Add header
+    pdf.setFillColor(41, 128, 185);
+    pdf.rect(0, 0, pageWidth, 25, 'F');
+    pdf.setTextColor(255, 255, 255);
+    pdf.setFontSize(20);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('ACCIDENT REPORT FORM', pageWidth / 2, 15, { align: 'center' });
+    
+    yPosition = 35;
+
+    // Helper function to add section
+    const addSection = (title, fields) => {
+      // Check if we need a new page
+      if (yPosition > 250) {
+        pdf.addPage();
+        yPosition = margin;
+      }
+
+      // Section header
+      pdf.setFillColor(245, 245, 245);
+      pdf.rect(margin, yPosition, pageWidth - 2 * margin, 8, 'F');
+      pdf.setTextColor(0, 0, 0);
+      pdf.setFontSize(12);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text(title, margin + 5, yPosition + 6);
+      yPosition += 15;
+
+      // Section content
+      pdf.setFontSize(10);
+      pdf.setFont('helvetica', 'normal');
+      
+      fields.forEach((field, index) => {
+        if (yPosition > 270) {
+          pdf.addPage();
+          yPosition = margin;
+        }
+
+        const label = field.label;
+        let value = field.value || 'Not provided';
+        
+        // Format boolean values
+        if (typeof value === 'boolean') {
+          value = value ? 'Yes' : 'No';
+        }
+
+        // Format dates
+        if (field.type === 'date' && value !== 'Not provided') {
+          value = formatDateForDisplay(value);
+        }
+
+        pdf.setFont('helvetica', 'bold');
+        pdf.text(`${label}:`, margin, yPosition);
+        pdf.setFont('helvetica', 'normal');
+        
+        // Handle multi-line text
+        const lines = pdf.splitTextToSize(value.toString(), pageWidth - 2 * margin - 50);
+        pdf.text(lines, margin + 40, yPosition);
+        
+        yPosition += Math.max(8, lines.length * 5);
+      });
+
+      yPosition += 5;
+    };
+
+    // Injured Person Details
+    addSection('DETAILS OF INJURED PERSON', [
+      { label: 'First Name', value: formData.first_name },
+      { label: 'Surname', value: formData.surname },
+      { label: 'Date of Birth', value: formData.date_of_birth, type: 'date' },
+      { label: 'Gender', value: formData.gender },
+      { label: 'Address', value: formData.address },
+      { label: 'Post Code', value: formData.postcode },
+      { label: 'Home Phone', value: formData.phone_home },
+      { label: 'Mobile Phone', value: formData.phone_mobile },
+      { label: 'Consent to Treatment', value: formData.consent_to_treatment },
+      { label: 'Refusal of Treatment', value: formData.refusal_of_treatment },
+      { label: 'Guardian Name', value: formData.guardian_name }
+    ]);
+
+    // Accident Details
+    addSection('ACCIDENT DETAILS', [
+      { label: 'Date of Accident', value: formData.date_of_accident, type: 'date' },
+      { label: 'Time of Accident', value: formData.time_of_accident },
+      { label: 'Location', value: formData.location },
+      { label: 'How Occurred', value: formData.how_occurred },
+      { label: 'Injury Details', value: formData.injury_details },
+      { label: 'Injury Location', value: formData.injury_location }
+    ]);
+
+    // Treatment Details
+    addSection('TREATMENT / ADVICE', [
+      { label: 'Treatment Given', value: formData.treatment_given },
+      { label: 'Hospital', value: formData.hospital },
+      { label: 'Time of Departure', value: formData.time_departure },
+      { label: 'Destination', value: formData.destination },
+      { label: 'Ambulance Called', value: formData.ambulance_called },
+      { label: 'Time Ambulance Called', value: formData.ambulance_time_called },
+      { label: 'Ambulance Caller', value: formData.ambulance_caller },
+      { label: 'Time Ambulance Arrived', value: formData.ambulance_time_arrived },
+      { label: 'Time Continued Activities', value: formData.continued_activities_time }
+    ]);
+
+    // First Aider Details
+    addSection('FIRST AIDER DETAILS', [
+      { label: 'First Aider Name', value: formData.first_aider_name },
+      { label: 'Date', value: formData.first_aider_date, type: 'date' },
+      { label: 'Time', value: formData.first_aider_time }
+    ]);
+
+    // Add signature if available
+    if (formData.first_aider_signature) {
+      if (yPosition > 150) {
+        pdf.addPage();
+        yPosition = margin;
+      }
+
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Signature:', margin, yPosition);
+      yPosition += 10;
+
+      try {
+        const signatureData = formData.first_aider_signature;
+        // Add signature image
+        pdf.addImage(signatureData, 'PNG', margin, yPosition, 80, 40);
+        yPosition += 50;
+      } catch (error) {
+        console.error('Error adding signature to PDF:', error);
+        pdf.text('Signature unavailable', margin, yPosition);
+        yPosition += 10;
+      }
+    }
+
+    // RIDDOR Section
+    if (formData.riddor_reportable) {
+      addSection('RIDDOR REPORTING', [
+        { label: 'RIDDOR Reportable', value: formData.riddor_reportable },
+        { label: 'Report Method', value: formData.riddor_report_method },
+        { label: 'Reported By', value: formData.riddor_reported_by },
+        { label: 'Date Reported', value: formData.riddor_date_reported, type: 'date' }
+      ]);
+    }
+
+    // Footer
+    const footerY = pdf.internal.pageSize.getHeight() - 10;
+    pdf.setFontSize(8);
+    pdf.setTextColor(128, 128, 128);
+    pdf.text(`Generated on ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}`, pageWidth / 2, footerY, { align: 'center' });
+
+    return pdf;
+  };
+
+  // Enhanced PDF Download function
+  const downloadPDF = () => {
+    try {
+      setIsLoading(true);
+      setMessage({ text: 'Generating professional PDF...', type: 'info' });
+
+      const pdf = generateProfessionalPDF();
+      
+      const fileName = `Accident-Report-${formData.first_name}-${formData.surname}-${new Date().toISOString().split('T')[0]}.pdf`;
+      pdf.save(fileName);
+      
+      setMessage({ text: 'PDF downloaded successfully!', type: 'success' });
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      setMessage({ text: 'Error generating PDF. Please try again.', type: 'error' });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Preview PDF in new tab
+  const previewPDF = () => {
+    try {
+      setIsLoading(true);
+      setMessage({ text: 'Generating PDF preview...', type: 'info' });
+
+      const pdf = generateProfessionalPDF();
+      
+      // Open PDF in new tab
+      const pdfBlob = pdf.output('blob');
+      const pdfUrl = URL.createObjectURL(pdfBlob);
+      window.open(pdfUrl, '_blank');
+      
+      setMessage({ text: 'PDF preview opened in new tab', type: 'success' });
+    } catch (error) {
+      console.error('Error generating PDF preview:', error);
+      setMessage({ text: 'Error generating PDF preview. Please try again.', type: 'error' });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -400,6 +640,7 @@ const IncidentReportForm = ({ onFormSubmit }) => {
         
         // Reset form after successful creation
         setFormData(initialFormState);
+        setSignatureLoaded(false);
         if (sigCanvas.current) {
           sigCanvas.current.clear();
         }
@@ -468,7 +709,7 @@ const IncidentReportForm = ({ onFormSubmit }) => {
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-8">
+        <div ref={formRef} className="bg-white rounded-xl shadow-lg border border-gray-200 p-8">
           {/* Header */}
           <div className="flex justify-between items-center mb-8">
             <div>
@@ -787,9 +1028,13 @@ const IncidentReportForm = ({ onFormSubmit }) => {
               />
               {fieldErrors.first_aider_time && <p className="text-red-500 text-xs mt-1">{fieldErrors.first_aider_time}</p>}
               
+              {/* Signature Section - Enhanced */}
               <div className="md:col-span-2">
                 <label className="text-sm font-medium text-gray-700 mb-2 block">
                   Signature <span className="text-red-500">*</span>
+                  {formData.first_aider_signature && (
+                    <span className="text-green-600 text-xs ml-2">✓ Saved (will appear in PDF)</span>
+                  )}
                 </label>
                 <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 bg-white">
                   <SignatureCanvas
@@ -801,7 +1046,18 @@ const IncidentReportForm = ({ onFormSubmit }) => {
                     }}
                     ref={sigCanvas}
                     onEnd={() => {
-                      // We'll save signature manually with a button to avoid the getTrimmedCanvas error
+                      // Auto-save signature when user finishes drawing
+                      if (sigCanvas.current && !sigCanvas.current.isEmpty()) {
+                        try {
+                          const dataUrl = sigCanvas.current.toDataURL("image/png");
+                          setFormData(prev => ({ 
+                            ...prev, 
+                            first_aider_signature: dataUrl 
+                          }));
+                        } catch (error) {
+                          console.error('Error auto-saving signature:', error);
+                        }
+                      }
                     }}
                   />
                   <div className="flex gap-3 mt-4">
@@ -820,14 +1076,6 @@ const IncidentReportForm = ({ onFormSubmit }) => {
                       Save Signature
                     </button>
                   </div>
-                  {formData.first_aider_signature && (
-                    <div className="mt-2 text-sm text-green-600 flex items-center">
-                      <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                      </svg>
-                      Signature saved
-                    </div>
-                  )}
                   {fieldErrors.first_aider_signature && (
                     <p className="text-red-500 text-xs mt-2">{fieldErrors.first_aider_signature}</p>
                   )}
@@ -875,23 +1123,24 @@ const IncidentReportForm = ({ onFormSubmit }) => {
               )}
             </FormSection>
 
-            {/* Message Display */}
             {message.text && (
-              <div
-                className={`p-4 rounded-lg border ${
-                  message.type === 'success'
-                    ? 'bg-green-50 text-green-800 border-green-200'
-                    : 'bg-red-50 text-red-800 border-red-200'
-                }`}
-              >
+              <div className={`p-4 rounded-lg border ${
+                message.type === 'success' ? 'bg-green-50 text-green-800 border-green-200' :
+                message.type === 'error' ? 'bg-red-50 text-red-800 border-red-200' :
+                'bg-blue-50 text-blue-800 border-blue-200'
+              }`}>
                 <div className="flex items-center">
                   {message.type === 'success' ? (
                     <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                     </svg>
-                  ) : (
+                  ) : message.type === 'error' ? (
                     <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                    </svg>
+                  ) : (
+                    <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                     </svg>
                   )}
                   {message.text}
@@ -899,7 +1148,7 @@ const IncidentReportForm = ({ onFormSubmit }) => {
               </div>
             )}
 
-            {/* Submit Button */}
+            {/* Enhanced Action Buttons */}
             <div className="flex justify-between pt-6 border-t border-gray-200">
               <button
                 type="button"
@@ -908,27 +1157,58 @@ const IncidentReportForm = ({ onFormSubmit }) => {
               >
                 Cancel
               </button>
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className={`px-8 py-3 text-lg font-medium text-white rounded-lg transition-colors ${
-                  isSubmitting 
-                    ? 'bg-gray-400 cursor-not-allowed' 
-                    : 'bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:ring-blue-200'
-                }`}
-              >
-                {isSubmitting ? (
-                  <span className="flex items-center">
-                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    {mode === 'create' ? 'Creating Report...' : 'Updating Report...'}
-                  </span>
-                ) : (
-                  mode === 'create' ? 'Create Accident Report' : 'Update Accident Report'
-                )}
-              </button>
+              
+              <div className="flex gap-4">
+                {/* PDF Preview Button */}
+                <button
+                  type="button"
+                  onClick={previewPDF}
+                  disabled={isLoading || !formData.first_name}
+                  className="px-6 py-3 text-lg font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                  Preview PDF
+                </button>
+
+                {/* PDF Download Button */}
+                <button
+                  type="button"
+                  onClick={downloadPDF}
+                  disabled={isLoading || !formData.first_name}
+                  className="px-6 py-3 text-lg font-medium text-white bg-green-600 border border-transparent rounded-lg hover:bg-green-700 transition-colors flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  Download PDF
+                </button>
+
+                {/* Submit Button */}
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className={`px-8 py-3 text-lg font-medium text-white rounded-lg transition-colors ${
+                    isSubmitting 
+                      ? 'bg-gray-400 cursor-not-allowed' 
+                      : 'bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:ring-blue-200'
+                  }`}
+                >
+                  {isSubmitting ? (
+                    <span className="flex items-center">
+                      <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      {mode === 'create' ? 'Creating Report...' : 'Updating Report...'}
+                    </span>
+                  ) : (
+                    mode === 'create' ? 'Create Report' : 'Update Report'
+                  )}
+                </button>
+              </div>
             </div>
           </form>
         </div>

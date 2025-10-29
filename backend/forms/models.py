@@ -459,7 +459,42 @@ class CafeChecklist(models.Model):
         
     def __str__(self):
         return f"{self.checklist_type} - {self.item_name} - {self.date}"
+
+class MarshalChecklist(models.Model):
+    CHECKLIST_TYPES = [
+        ('pre_shift', 'Pre-Shift Marshal Checklist'),
+        ('shift_operations', 'Shift Operations Checklist'),
+        ('post_shift', 'Post-Shift Marshal Checklist'),
+    ]
     
+    date = models.DateField()
+    checklist_type = models.CharField(max_length=50, choices=CHECKLIST_TYPES, null=True, blank=True)
+    item_id = models.CharField(max_length=100, null=True, blank=True)
+    item_name = models.CharField(max_length=255, null=True, blank=True)
+    completed = models.BooleanField(default=False, null=True, blank=True)
+    
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="marshal_checklist_creators"
+    )
+    updated_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="marshal_checklist_updates"
+    )
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        # Prevent duplicate entries for same item on same date
+        unique_together = ['date', 'checklist_type', 'item_id']
+        ordering = ['checklist_type', 'item_id']
+        
+    def __str__(self):
+        return f"{self.checklist_type} - {self.item_name} - {self.date}"
+        
 class StaffAppraisal(models.Model):
     """
     Staff Appraisal model based on appraisal form

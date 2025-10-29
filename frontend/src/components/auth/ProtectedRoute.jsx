@@ -27,7 +27,7 @@ const ProtectedRoute = ({ user, children, allowedRoles = [] }) => {
             <p>Required roles: {allowedRoles.join(', ')}</p>
           </div>
           <a
-            href="/dashboard"
+            href={"/employee/dashboard"}
             className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors inline-block"
           >
             Back to Dashboard

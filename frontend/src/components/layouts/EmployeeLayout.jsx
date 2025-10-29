@@ -12,7 +12,6 @@ const EmployeeLayout = ({ user, onLogout, children }) => {
   // Define navigation items for the layout
   const navigationItems = [
     { id: 'dashboard', label: 'Dashboard', icon: Home, roles: ['admin', 'manager', 'staff', 'employee'] },
-    { id: 'maintenance', label: 'Maintenance', icon: Settings, roles: ['admin', 'manager', 'maintenance'] },
     { id: 'safety', label: 'Safety', icon: AlertCircle, roles: ['admin', 'manager', 'safety_officer'] },
     { id: 'incidents', label: 'Incidents', icon: FileText, roles: ['admin', 'manager'] },
     { id: 'cleaning', label: 'Cleaning', icon: Users, roles: ['admin', 'manager', 'cleaning_staff'] },
@@ -40,7 +39,6 @@ const EmployeeLayout = ({ user, onLogout, children }) => {
     const path = location.pathname;
     if (path === '/dashboard') return 'dashboard';
     if (path.includes('/forms/cafe')) return 'cafe';
-    if (path.includes('/forms/maintenance')) return 'maintenance';
     if (path.includes('/forms/safety')) return 'safety';
     if (path.includes('/forms/incident')) return 'incidents';
     if (path.includes('/forms/cleaning')) return 'cleaning';

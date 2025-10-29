@@ -12,7 +12,7 @@ from django.db.models import Count, Sum, Q, Avg
 from django.utils import timezone
 from datetime import timedelta, datetime
 from decimal import Decimal
-import calendar, base64, datetime, io
+import calendar, base64, datetime, io, json
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 from .models import (
@@ -292,14 +292,15 @@ class DailyInspectionListCreateView(generics.ListCreateAPIView):
     def get_queryset(self):
         queryset = DailyInspection.objects.select_related('checked_by', 'signed_off_by')
         
-        # Filter by date range
-        start_date = self.request.query_params.get('start_date')
-        end_date = self.request.query_params.get('end_date')
+        # Filter by specific date
+        date = self.request.query_params.get('date')
+        if date:
+            queryset = queryset.filter(date=date)
         
-        if start_date:
-            queryset = queryset.filter(date__gte=start_date)
-        if end_date:
-            queryset = queryset.filter(date__lte=end_date)
+        # Filter by user if needed
+        user_id = self.request.query_params.get('user_id')
+        if user_id:
+            queryset = queryset.filter(checked_by_id=user_id)
             
         # Filter by inspection day
         day = self.request.query_params.get('day')
@@ -830,7 +831,112 @@ class CafeChecklistViewSet(viewsets.ModelViewSet):
         
         serializer = CafeChecklistSerializer(updated_items, many=True)
         return Response(serializer.data)
+
+# ---------------- MARSHAL CHECKLIST ----------------
+class MarshalChecklistViewSet(viewsets.ModelViewSet):
+    serializer_class = MarshalChecklistSerializer
+    permission_classes = [IsOwnerOrStaffReadOnly]
+
+    def get_queryset(self):
+        qs = MarshalChecklist.objects.all()
+
+        date = self.request.query_params.get("date")
+        if date:
+            try:
+                qs = qs.filter(date=date)
+            except Exception:
+                raise ValidationError({"date": "Invalid date format. Use YYYY-MM-DD."})
+
+        user = self.request.user
+        role = getattr(user, "role", None)
+
+        if role == "owner":
+            staff_id = self.request.query_params.get("staff")
+            completed = self.request.query_params.get("completed")
+
+            if staff_id:
+                qs = qs.filter(updated_by_id=staff_id)
+
+            if completed in ['true', 'false']:
+                is_completed = completed == 'true'
+                qs = qs.filter(completed=is_completed)
+
+            return qs
+
+        return qs.filter(updated_by=user)
     
+    def perform_create(self, serializer):
+        """Automatically set user fields when creating new checklist items"""
+        serializer.save(
+            created_by=self.request.user,
+            updated_by=self.request.user
+        )
+
+    def perform_update(self, serializer):
+        """Automatically set updated_by when updating checklist items"""
+        serializer.save(updated_by=self.request.user)
+
+    @action(detail=True, methods=["post"])
+    def toggle(self, request, pk=None):
+        checklist = self.get_object()
+        checklist.completed = not checklist.completed
+        checklist.updated_by = request.user
+        checklist.save()
+        return Response(self.get_serializer(checklist).data)
+
+    @action(detail=False, methods=["post"])
+    def create_marshal_checklist_batch(self, request):
+        items_data = request.data.get('items', [])
+        created_items = []
+
+        for item_data in items_data:
+            item, created = MarshalChecklist.objects.get_or_create(
+                date=item_data['date'],
+                checklist_type=item_data['checklist_type'],
+                item_id=item_data['item_id'],
+                defaults={
+                    'item_name': item_data['item_name'],
+                    'completed': False,
+                    'created_by': request.user,
+                    'updated_by': request.user,
+                }
+            )
+
+            if not created:
+                item.updated_by = request.user
+                item.save(update_fields=['updated_by'])
+
+            created_items.append(item)
+
+        serializer = MarshalChecklistSerializer(created_items, many=True)
+        return Response(serializer.data)
+    
+    @action(detail=False, methods=["post"])
+    def batch_toggle(self, request):
+        """Toggle multiple items at once - useful for bulk operations"""
+        item_ids = request.data.get('item_ids', [])
+        
+        if not item_ids:
+            return Response(
+                {"error": "item_ids is required"}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        updated_items = []
+        for item_id in item_ids:
+            try:
+                item = self.get_queryset().get(id=item_id)
+                item.completed = not item.completed
+                item.updated_by = request.user
+                item.save()
+                updated_items.append(item)
+            except MarshalChecklist.DoesNotExist:
+                continue
+        
+        serializer = MarshalChecklistSerializer(updated_items, many=True)
+        return Response(serializer.data)
+    
+# ---------------- WAIVERS ----------------    
 class WaiverSessionViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     

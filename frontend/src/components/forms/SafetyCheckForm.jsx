@@ -12,30 +12,38 @@ const SafetyCheckForm = () => {
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const [hasSubmittedToday, setHasSubmittedToday] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Get current user on component mount
   useEffect(() => {
     const user = apiService.getCurrentUser();
     setCurrentUser(user);
+    console.log('Current user:', user);
   }, []);
 
   // Check if user has already submitted today
   useEffect(() => {
     const checkSubmissionStatus = async () => {
+      if (!currentUser) return;
+      
       try {
+        setIsLoading(true);
         const today = format(new Date(), 'yyyy-MM-dd');
+        console.log('Checking submission for date:', today);
+        
         const response = await apiService.checkDailySubmission(today);
+        console.log('Submission check result:', response);
+        
         setHasSubmittedToday(response.hasSubmitted);
       } catch (error) {
         console.error('Error checking submission status:', error);
-        // If endpoint doesn't exist yet, assume no submission
         setHasSubmittedToday(false);
+      } finally {
+        setIsLoading(false);
       }
     };
     
-    if (currentUser) {
-      checkSubmissionStatus();
-    }
+    checkSubmissionStatus();
   }, [currentUser]);
 
   const inspectionItems = apiService.getInspectionItems();
@@ -120,7 +128,8 @@ const SafetyCheckForm = () => {
       manager_initials: managerInitials,
       inspection_results: inspectionData,
       remedial_notes: remedialNotes,
-      submission_date: format(new Date(), 'yyyy-MM-dd')
+      submission_date: format(new Date(), 'yyyy-MM-dd'),
+      checked_by: currentUser?.id || null
     };
 
     try {
@@ -143,7 +152,7 @@ const SafetyCheckForm = () => {
 
   const handleDialogClose = () => {
     setShowSuccessDialog(false);
-    navigate('/dashboard');
+    navigate('/employee/dashboard');
   };
 
   const getStatusColor = (status) => {
@@ -160,6 +169,18 @@ const SafetyCheckForm = () => {
   const passedItemsCount = Object.values(inspectionData).filter(status => status === 'pass').length;
 
   // If user has already submitted today, show message
+  if (isLoading) {
+    return (
+      <div className="max-w-2xl mx-auto p-6">
+        <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-8 text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Checking Submission Status...</h2>
+          <p className="text-gray-600">Please wait while we check if you've already submitted today's inspection.</p>
+        </div>
+      </div>
+    );
+  }
+  
   if (hasSubmittedToday && !showSuccessDialog) {
     return (
       <div className="max-w-2xl mx-auto p-6">

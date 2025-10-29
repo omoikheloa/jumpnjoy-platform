@@ -4,13 +4,12 @@ const Navigation = ({ user, currentView, setCurrentView, onLogout }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const navItems = [
-    { key: 'safety', label: 'Safety Check', icon: 'í»¡ï¸', roles: ['owner', 'staff'] },
+    { key: 'safety', label: 'Safety Check', icon: 'ï¿½ï¿½ï¿½ï¸', roles: ['owner', 'staff'] },
     { key: 'incident', label: 'Incident Report', icon: 'âš ï¸', roles: ['owner', 'staff'] },
     { key: 'shift', label: 'Staff Shift', icon: 'â°', roles: ['owner', 'staff'] },
-    { key: 'cleaning', label: 'Cleaning Log', icon: 'í·½', roles: ['owner', 'staff'] },
-    { key: 'maintenance', label: 'Maintenance', icon: 'í´§', roles: ['owner', 'staff'] },
-    { key: 'stats', label: 'Daily Stats', icon: 'í³Š', roles: ['owner', 'staff'] },
-    { key: 'dashboard', label: 'Dashboard', icon: 'í³ˆ', roles: ['owner'] },
+    { key: 'cleaning', label: 'Cleaning Log', icon: 'ï¿½ï¿½ï¿½', roles: ['owner', 'staff'] },
+    { key: 'stats', label: 'Daily Stats', icon: 'ï¿½ï¿½ï¿½', roles: ['owner', 'staff'] },
+    { key: 'dashboard', label: 'Dashboard', icon: 'ï¿½ï¿½ï¿½', roles: ['owner'] },
   ];
 
   // Filter navigation items based on user role

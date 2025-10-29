@@ -205,6 +205,28 @@ class ApiService {
     return this.get(`/cafe-checklists/?date=${date}`);
   }
 
+  // MarshalChecklist
+  async getMarshalChecklists(params = {}) {
+    const query = new URLSearchParams(params).toString();
+    return this.get(`/marshal-checklists/${query ? `?${query}` : ''}`);
+  }
+
+  async createMarshalChecklist(data) {
+    return this.post('/marshal-checklists/', data);
+  }
+
+  async updateMarshalChecklist(itemId, data) {
+    return this.patch(`/marshal-checklists/${itemId}/`, data);
+  }
+
+  async toggleMarshalChecklistItem(itemId) {
+    return this.post(`/marshal-checklists/${itemId}/toggle/`);
+  }
+
+  async getMarshalChecklistByDate(date) {
+    return this.get(`/marshal-checklists/?date=${date}`);
+  }
+
   // =========================================================================
   // DAILY INSPECTION API METHODS - UPDATED TO MATCH YOUR DJANGO BACKEND
   // =========================================================================
@@ -243,6 +265,11 @@ class ApiService {
   async createDailyInspection(data) {
     // Transform frontend data structure to match Django API
     const today = new Date().toISOString().split("T")[0];
+
+    const currentUser = this.getCurrentUser();
+    if (!currentUser || !currentUser.id) {
+      throw new Error('User not authenticated. Please log in again.');
+    }
     
     const apiData = {
       date: today,
@@ -271,7 +298,9 @@ class ApiService {
       staff_availability: data.inspection_results?.INS018 || 'pass',
       
       // Include remedial notes for automatic RemedialAction creation
-      remedial_notes: data.remedial_notes || {}
+      remedial_notes: data.remedial_notes || {},
+
+      checked_by: currentUser.id
     };
 
     return this.post('/daily-inspections/', apiData);

@@ -33,8 +33,7 @@ import {
   Lock,
   Wifi,
   WifiOff,
-  Edit,
-  Trash2,
+  ChevronRight,
   Menu,
   X,
   TrendingUp,
@@ -46,13 +45,11 @@ import {
 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell, AreaChart, Area } from 'recharts';
 import apiService from '../../services/api';
-import CafeChecklistsView from '../forms/CafeChecklistsView';
-import IncidentReportsView from '../forms/IncidentReportsView';
-import StaffAppraisalsView from '../forms/StaffAppraisalsView';
 import CafeChecklistGrid from '../OwnerDashboardComps/CafeChecklistGrid';
 import UserManagementContent from './UserManagementContent';
 import StaffAppraisalGrid from '../OwnerDashboardComps/StaffAppraisalGrid';
 import RecentIncidentsGrid from '../OwnerDashboardComps/RecentIncidentsGrid';
+import MarshalChecklistGrid from '../forms/MarshalChecklistGrid';
 
 // Jump 'n Joy Logo Component
 const JumpNJoyLogo = ({ size = "w-8 h-8" }) => (
@@ -443,7 +440,7 @@ const StatisticsCards = ({ dashboardData, loading }) => {
       iconColor: 'text-blue-600',
       textColor: 'text-blue-600',
       format: (val) => val.toLocaleString(),
-      trend: '+0%' // Placeholder trend
+      trend: '+0%'
     },
     {
       title: 'Recent Incidents',
@@ -520,16 +517,28 @@ const DashboardContent = () => {
   const [incidents, setIncidents] = useState(null);
   const [appraisals, setAppraisals] = useState(null);
   const [cafeChecklists, setCafeChecklists] = useState(null);
+  const [marshalChecklists, setMarshalChecklists] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
 
   const navigate = useNavigate();
 
-  const handleViewChecklist = (checklistType, date) => {
-    navigate(`/checklists/view?date=${date}`);
+  // Updated handler to navigate to all checklists page
+  const handleViewAllChecklists = () => {
+    navigate('/checklists');
   };
 
+  // Handler for viewing a specific checklist
+  const handleViewChecklist = (checklistId, checklistType) => {
+    navigate(`/checklists/view/${checklistId}`);
+  };
+
+  const handleViewAllMarshalChecklists = () => {
+    navigate('/marshal-checklists');
+  };
+
+  // Handler for viewing a specific checklist
   const fetchAllData = useCallback(async () => {
     try {
       if (!refreshing) setLoading(true);
@@ -540,48 +549,59 @@ const DashboardContent = () => {
         statsData,
         incidentsData,
         appraisalsData,
-        cafeData
+        cafeData,
+        marshalData
       ] = await Promise.allSettled([
         apiService.getDashboardData(),
         apiService.getDailyStats(),
         apiService.getIncidents(),
         apiService.getAppraisals(),
-        apiService.getCafeChecklists()
+        apiService.getCafeChecklists(),
+        apiService.getMarshalChecklists?.() || Promise.resolve({ results: [] })
       ]);
 
       // Handle results
       if (dashData.status === 'fulfilled') setDashboardData(dashData.value);
       if (statsData.status === 'fulfilled') {
-      const statsItems = statsData.value.results || statsData.value;
-      setDailyStats(Array.isArray(statsItems) ? statsItems : []);
-        }
-      // Extract incidents from results array
+        const statsItems = statsData.value.results || statsData.value;
+        setDailyStats(Array.isArray(statsItems) ? statsItems : []);
+      }
+      
       if (incidentsData.status === 'fulfilled') {
         const incidentsItems = incidentsData.value.results || incidentsData.value;
         setIncidents(Array.isArray(incidentsItems) ? incidentsItems : []);
       }
-      // Extract appraisals from results array
+      
       if (appraisalsData.status === 'fulfilled') {
         const appraisalsItems = appraisalsData.value.results || appraisalsData.value;
         setAppraisals(Array.isArray(appraisalsItems) ? appraisalsItems : []);
       }
+      
       if (cafeData.status === 'fulfilled') {
-      // Handle paginated response for cafe checklists
-      const cafeItems = cafeData.value.results || cafeData.value;
-      setCafeChecklists(Array.isArray(cafeItems) ? cafeItems : []);
-    }
+        const cafeItems = cafeData.value.results || cafeData.value;
+        setCafeChecklists(Array.isArray(cafeItems) ? cafeItems : []);
+      }
+
+      // ✅ Handle marshal checklists
+      if (marshalData.status === 'fulfilled') {
+        const marshalItems = marshalData.value.results || marshalData.value;
+        setMarshalChecklists(Array.isArray(marshalItems) ? marshalItems : []);
+      }
 
       // Check for any failures
-      const failures = [dashData, statsData, incidentsData, appraisalsData, cafeData]
+      const failures = [dashData, statsData, incidentsData, appraisalsData, cafeData, marshalData]
         .filter(result => result.status === 'rejected');
       
       if (failures.length > 0) {
         console.warn('Some API calls failed:', failures.map(f => f.reason?.message));
+        if (failures.length === [dashData, statsData, incidentsData, appraisalsData, cafeData, marshalData].length) {
+          setError('Unable to load dashboard data. Please check your connection.');
+        }
       }
 
     } catch (err) {
       console.error('Error fetching dashboard data:', err);
-      setError(err.message);
+      setError(err.message || 'An error occurred while fetching data');
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -601,6 +621,22 @@ const DashboardContent = () => {
     return () => clearInterval(interval);
   }, [fetchAllData]);
 
+  // If there's a critical error, show error state
+  if (error && !dashboardData) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-96 space-y-4">
+        <AlertCircle className="w-12 h-12 text-red-500" />
+        <p className="text-gray-600">{error}</p>
+        <button 
+          onClick={handleRefresh}
+          className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"
+        >
+          Try Again
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8">
       {/* Refresh Button */}
@@ -619,14 +655,20 @@ const DashboardContent = () => {
       <StatisticsCards loading={loading} />
       
       {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {/* Cafe Checklist Card */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300 group">
-          <div className="flex items-center space-x-4 mb-4">
-            <div className="p-3 bg-blue-100 rounded-xl group-hover:scale-110 transition-transform duration-300">
-              <ClipboardList className="w-6 h-6 text-blue-600" />
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
+        {/* Cafe Checklist Card - clickable */}
+        <div 
+          onClick={handleViewAllChecklists}
+          className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300 group cursor-pointer hover:border-blue-300"
+        >
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center space-x-4">
+              <div className="p-3 bg-blue-100 rounded-xl group-hover:scale-110 transition-transform duration-300">
+                <ClipboardList className="w-6 h-6 text-blue-600" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900">Daily Checklists</h3>
             </div>
-            <h3 className="text-lg font-semibold text-gray-900">Daily Checklists</h3>
+            <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-blue-500 transition-colors" />
           </div>
           <CafeChecklistGrid 
             checklists={cafeChecklists} 
@@ -634,34 +676,83 @@ const DashboardContent = () => {
             onViewChecklist={handleViewChecklist}
             embedded={true}
           />
+          
+          {/* Fallback if no checklists */}
+          {!loading && (!cafeChecklists || cafeChecklists.length === 0) && (
+            <div className="text-center py-4">
+              <p className="text-gray-500 text-sm">No checklists available</p>
+              <p className="text-blue-500 text-xs mt-1">Click to create one</p>
+            </div>
+          )}
         </div>
 
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300 group">
-          <div className="flex items-center space-x-4 mb-4">
-            <div className="p-3 bg-red-100 rounded-xl group-hover:scale-110 transition-transform duration-300">
-              <AlertTriangle className="w-6 h-6 text-red-600" />
+        {/* Marshal Checklist Card */}
+        <div 
+          onClick={handleViewAllMarshalChecklists}
+          className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300 group cursor-pointer hover:border-blue-300"
+        >
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center space-x-4">
+              <div className="p-3 bg-blue-100 rounded-xl group-hover:scale-110 transition-transform duration-300">
+                <ClipboardList className="w-6 h-6 text-blue-600" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900">Daily Checklists</h3>
             </div>
-            <h3 className="text-lg font-semibold text-gray-900">Incident Reports</h3>
+            <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-blue-500 transition-colors" />
+          </div>
+          <MarshalChecklistGrid
+            checklists={marshalChecklists} 
+            loading={loading} 
+            onViewChecklist={handleViewAllMarshalChecklists}
+            embedded={true}
+          />
+          
+          {/* Fallback if no checklists */}
+          {!loading && (!marshalChecklists || marshalChecklists.length === 0) && (
+            <div className="text-center py-4">
+              <p className="text-gray-500 text-sm">No checklists available</p>
+            </div>
+          )}
+        </div>
+
+        {/* Incident Reports Card */}
+        <div 
+          onClick={() => navigate('/incidents')}
+          className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300 group cursor-pointer hover:border-red-300"
+        >
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center space-x-4">
+              <div className="p-3 bg-red-100 rounded-xl group-hover:scale-110 transition-transform duration-300">
+                <AlertTriangle className="w-6 h-6 text-red-600" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900">Incident Reports</h3>
+            </div>
+            <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-red-500 transition-colors" />
           </div>
           <RecentIncidentsGrid
             incidents={incidents} 
             loading={loading} 
-            onViewAll={() => navigate('/incidents')}
             embedded={true}
           />
         </div>
 
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300 group">
-          <div className="flex items-center space-x-4 mb-4">
-            <div className="p-3 bg-green-100 rounded-xl group-hover:scale-110 transition-transform duration-300">
-              <Star className="w-6 h-6 text-green-600" />
+        {/* Staff Appraisals Card */}
+        <div 
+          onClick={() => navigate('/appraisals')}
+          className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300 group cursor-pointer hover:border-green-300"
+        >
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center space-x-4">
+              <div className="p-3 bg-green-100 rounded-xl group-hover:scale-110 transition-transform duration-300">
+                <Star className="w-6 h-6 text-green-600" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900">Staff Appraisals</h3>
             </div>
-            <h3 className="text-lg font-semibold text-gray-900">Staff Appraisals</h3>
+            <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-green-500 transition-colors" />
           </div>
           <StaffAppraisalGrid
             appraisals={appraisals} 
             loading={loading} 
-            onViewAll={() => navigate('/appraisals')}
             embedded={true}
           />
         </div>

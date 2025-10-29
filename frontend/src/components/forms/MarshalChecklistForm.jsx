@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Check, Clock, User, Calendar, AlertCircle, Coffee, RefreshCw, RotateCcw } from "lucide-react";
+import { Check, Clock, User, Calendar, AlertCircle, Shield, RefreshCw, RotateCcw } from "lucide-react";
 import apiService from "../../services/api";
 
-const CafeChecklistForm = () => {
-  const [activeChecklist, setActiveChecklist] = useState("opening");
+const MarshalChecklistForm = () => {
+  const [activeChecklist, setActiveChecklist] = useState("pre_shift");
   const [checklistItems, setChecklistItems] = useState({});
   const [loading, setLoading] = useState(false);
   const [initializing, setInitializing] = useState(false);
@@ -13,52 +13,51 @@ const CafeChecklistForm = () => {
   const [user, setUser] = useState(apiService.getCurrentUser());
   const [lastSyncTime, setLastSyncTime] = useState(null);
 
-  // Static checklist definitions
+  // Marshal checklist definitions
   const checklists = {
-    opening: {
-      title: "Opening Checklist",
-      description: "Complete these tasks when opening the cafe",
+    pre_shift: {
+      title: "Pre-Shift Marshal Checklist",
+      description: "Complete these tasks before starting your marshal shift",
       color: "green",
       items: [
-        { id: "ground_coffee", label: "Ground coffee" },
-        { id: "turn_on_appliances", label: "Turn on all appliances" },
-        { id: "open_cafe_till", label: "Open up cafe till" },
-        { id: "morning_fridge_temps", label: "Take morning fridge temps" },
-        { id: "hot_dog_temps", label: "Take hot dog temps" },
-        { id: "fill_cake_stand", label: "Fill up cake stand" },
-        { id: "fill_slush_bottles", label: "Fill slush bottles for the day" },
-        { id: "stock_straws/lids", label: "Stock straws and lids" },
-        { id: "clean_tables_chairs", label: "Clean tables and chairs" },
+        { id: "uniform_inspection", label: "Uniform inspection and presentation" },
+        { id: "equipment_check", label: "Check all marshal equipment" },
+        { id: "radio_check", label: "Radio communication check" },
+        { id: "briefing_review", label: "Review daily briefing and updates" },
+        { id: "post_assignment", label: "Confirm assigned posts and zones" },
+        { id: "emergency_procedures", label: "Review emergency procedures" },
+        { id: "weather_check", label: "Check weather conditions and alerts" },
+        { id: "access_points", label: "Verify access points are clear" },
       ],
     },
-    midday: {
-      title: "Midday Operations Checklist",
-      description: "Regular tasks throughout the day",
+    shift_operations: {
+      title: "Shift Operations Checklist",
+      description: "Regular tasks during marshal shift operations",
       color: "blue",
       items: [
-        { id: "check_food_temps", label: "Check food temperatures" },
-        { id: "refill_coffee_beans", label: "Refill coffee beans" },
-        { id: "clean_espresso_machine", label: "Clean espresso machine" },
-        { id: "restock_cups_lids", label: "Restock cups and lids" },
-        { id: "wipe_tables_chairs", label: "Wipe down tables and chairs" },
-        { id: "check_milk_levels", label: "Check milk levels" },
-        { id: "empty_bins", label: "Empty bins if needed" },
-        { id: "sanitize_surfaces", label: "Sanitize high-touch surfaces" },
+        { id: "crowd_monitoring", label: "Continuous crowd monitoring" },
+        { id: "access_control", label: "Access control verification" },
+        { id: "patrol_rounds", label: "Complete scheduled patrol rounds" },
+        { id: "incident_reporting", label: "Document any incidents" },
+        { id: "communication_update", label: "Update control room regularly" },
+        { id: "safety_hazards", label: "Identify and report safety hazards" },
+        { id: "assistance_provided", label: "Provide visitor assistance as needed" },
+        { id: "equipment_functionality", label: "Check equipment functionality" },
       ],
     },
-    closing: {
-      title: "Closing Checklist",
-      description: "End of day tasks before closing",
-      color: "red",
+    post_shift: {
+      title: "Post-Shift Marshal Checklist",
+      description: "End of shift tasks and handover procedures",
+      color: "purple",
       items: [
-        { id: "turn_off_appliances", label: "Turn off all appliances" },
-        { id: "clean_coffee_machines", label: "Deep clean coffee machines" },
-        { id: "close_till_count", label: "Close till and count cash" },
-        { id: "final_temp_check", label: "Final temperature check" },
-        { id: "store_perishables", label: "Store perishables properly" },
-        { id: "wipe_all_surfaces", label: "Wipe down all surfaces" },
-        { id: "sweep_mop_floors", label: "Sweep and mop floors" },
-        { id: "lock_secure_premises", label: "Lock and secure premises" },
+        { id: "incident_reports", label: "Complete all incident reports" },
+        { id: "equipment_return", label: "Return all marshal equipment" },
+        { id: "handover_documentation", label: "Complete shift handover documentation" },
+        { id: "brief_next_shift", label: "Brief incoming marshal team" },
+        { id: "area_inspection", label: "Final area inspection and security check" },
+        { id: "radio_handover", label: "Radio handover to next shift" },
+        { id: "debrief_meeting", label: "Attend shift debrief meeting" },
+        { id: "equipment_maintenance", label: "Report any equipment maintenance needs" },
       ],
     },
   };
@@ -92,9 +91,9 @@ const CafeChecklistForm = () => {
       setError("");
       const today = new Date().toISOString().split("T")[0];
       
-      console.log("Fetching backend state for date:", today);
-      const data = await apiService.getCafeChecklists({ date: today });
-      console.log("Backend response:", data);
+      console.log("Fetching marshal backend state for date:", today);
+      const data = await apiService.getMarshalChecklists({ date: today });
+      console.log("Marshal backend response:", data);
 
       // Always start from a clean state
       const initialState = initializeEmptyState();
@@ -103,7 +102,7 @@ const CafeChecklistForm = () => {
       if (data && data.length > 0) {
         // Map backend data to frontend state
         data.forEach((item) => {
-          const type = item.checklist_type || "opening";
+          const type = item.checklist_type || "pre_shift";
           const id = item.item_id;
 
           if (updatedState[type] && updatedState[type][id] !== undefined) {
@@ -113,26 +112,26 @@ const CafeChecklistForm = () => {
               completedBy: item.updated_by?.username || item.updated_by || null,
               backendId: item.id,
             };
-            console.log(`Loaded item: ${type}.${id} = ${item.completed}`, item);
+            console.log(`Loaded marshal item: ${type}.${id} = ${item.completed}`, item);
           } else {
-            console.warn(`Item not found in frontend definition: ${type}.${id}`);
+            console.warn(`Marshal item not found in frontend definition: ${type}.${id}`);
           }
         });
 
         setChecklistItems(updatedState);
         setLastSyncTime(new Date());
-        console.log("Frontend state updated with backend data");
+        console.log("Marshal frontend state updated with backend data");
         
       } else {
-        console.log("No backend items found, initializing...");
+        console.log("No marshal backend items found, initializing...");
         // If no backend items exist, initialize them
         await initializeTodaysItems();
         return;
       }
 
     } catch (err) {
-      console.error("Error loading checklists:", err);
-      setError(`Failed to load today's checklists: ${err.message || 'Unknown error'}`);
+      console.error("Error loading marshal checklists:", err);
+      setError(`Failed to load today's marshal checklists: ${err.message || 'Unknown error'}`);
       
       // Set empty state on error to prevent undefined issues
       setChecklistItems(initializeEmptyState());
@@ -149,7 +148,7 @@ const CafeChecklistForm = () => {
       setError("");
       const today = new Date().toISOString().split("T")[0];
 
-      console.log("Initializing backend items for date:", today);
+      console.log("Initializing marshal backend items for date:", today);
 
       const itemsToCreate = [];
       Object.entries(checklists).forEach(([type, checklist]) => {
@@ -163,14 +162,14 @@ const CafeChecklistForm = () => {
         });
       });
 
-      console.log("Creating items:", itemsToCreate);
+      console.log("Creating marshal items:", itemsToCreate);
 
       // Create all items in batch
-      const createdItems = await apiService.post("/cafe-checklists/create_checklist_batch/", {
+      const createdItems = await apiService.post("/marshal-checklists/create_marshal_checklist_batch/", {
         items: itemsToCreate,
       });
       
-      console.log("Backend created items:", createdItems);
+      console.log("Marshal backend created items:", createdItems);
 
       // Update local state with created items
       const updatedState = initializeEmptyState();
@@ -190,12 +189,12 @@ const CafeChecklistForm = () => {
 
       setChecklistItems(updatedState);
       setLastSyncTime(new Date());
-      setSuccess("Today's checklist initialized successfully");
+      setSuccess("Today's marshal checklist initialized successfully");
       setTimeout(() => setSuccess(""), 3000);
       
     } catch (err) {
-      console.error("Error initializing checklist:", err);
-      setError(`Failed to initialize today's checklist: ${err.message || 'Unknown error'}`);
+      console.error("Error initializing marshal checklist:", err);
+      setError(`Failed to initialize today's marshal checklist: ${err.message || 'Unknown error'}`);
       setTimeout(() => setError(""), 5000);
     } finally {
       setInitializing(false);
@@ -212,8 +211,8 @@ const CafeChecklistForm = () => {
     }
 
     if (!checklists[checklistType] || !checklists[checklistType].items.find(item => item.id === itemId)) {
-      console.warn(`Item not found in checklist definition: ${checklistType} -> ${itemId}`);
-      setError("Invalid checklist item");
+      console.warn(`Marshal item not found in checklist definition: ${checklistType} -> ${itemId}`);
+      setError("Invalid marshal checklist item");
       setTimeout(() => setError(""), 3000);
       return;
     }
@@ -222,7 +221,7 @@ const CafeChecklistForm = () => {
     const currentItem = checklistItems[checklistType]?.[itemId];
     const itemExistsInBackend = currentItem && currentItem.backendId;
 
-    console.log(`Toggling item: ${checklistType}.${itemId}`, {
+    console.log(`Toggling marshal item: ${checklistType}.${itemId}`, {
       currentState: currentItem,
       existsInBackend: itemExistsInBackend
     });
@@ -247,30 +246,30 @@ const CafeChecklistForm = () => {
 
       if (itemExistsInBackend) {
         // CASE 1: Update existing backend item
-        console.log(`Updating existing backend item ID: ${currentItem.backendId}`);
-        updatedItem = await apiService.toggleCafeChecklistItem(currentItem.backendId);
-        console.log("Backend toggle response:", updatedItem);
+        console.log(`Updating existing marshal backend item ID: ${currentItem.backendId}`);
+        updatedItem = await apiService.toggleMarshalChecklistItem(currentItem.backendId);
+        console.log("Marshal backend toggle response:", updatedItem);
         
       } else {
         // CASE 2: Create new backend item then toggle
         const today = new Date().toISOString().split("T")[0];
         
-        console.log("Creating new backend item...");
-        const createdItems = await apiService.post("/cafe-checklists/create_checklist_batch/", {
-          items: [{
+        console.log("Creating new marshal backend item...");
+        const createdItems = await apiService.post("/marshal-checklist/create_checklist_batch/", {
+            items: [{
             checklist_type: checklistType,
             item_id: itemId,
             item_name: itemDefinition.label,
             date: today,
-          }]
+            }],
         });
 
         const createdItem = createdItems[0];
-        console.log("Created backend item:", createdItem);
+        console.log("Created marshal backend item:", createdItem);
         
         // Toggle the newly created item to completed
-        updatedItem = await apiService.toggleCafeChecklistItem(createdItem.id);
-        console.log("Backend toggle response for new item:", updatedItem);
+        updatedItem = await apiService.toggleMarshalChecklistItem(createdItem.id);
+        console.log("Marshal backend toggle response for new item:", updatedItem);
       }
 
       // Update frontend state with backend response
@@ -287,7 +286,7 @@ const CafeChecklistForm = () => {
         },
       }));
 
-      console.log(`Successfully ${itemExistsInBackend ? 'updated' : 'created'} item:`, 
+      console.log(`Successfully ${itemExistsInBackend ? 'updated' : 'created'} marshal item:`, 
                   `${checklistType}.${itemId} = ${updatedItem.completed}`);
 
       // Show success for new items
@@ -297,7 +296,7 @@ const CafeChecklistForm = () => {
       }
       
     } catch (err) {
-      console.error(`Error ${itemExistsInBackend ? 'updating' : 'creating'} checklist item:`, err);
+      console.error(`Error ${itemExistsInBackend ? 'updating' : 'creating'} marshal checklist item:`, err);
       
       // Revert optimistic update on error
       setChecklistItems(prev => ({
@@ -313,14 +312,14 @@ const CafeChecklistForm = () => {
         },
       }));
       
-      setError(`Failed to ${itemExistsInBackend ? 'update' : 'create'} checklist item: ${err.message || 'Unknown error'}`);
+      setError(`Failed to ${itemExistsInBackend ? 'update' : 'create'} marshal checklist item: ${err.message || 'Unknown error'}`);
       setTimeout(() => setError(""), 5000);
     }
   };
 
   // Manual refresh function
   const handleRefresh = () => {
-    console.log("Manual refresh triggered");
+    console.log("Marshal manual refresh triggered");
     loadTodaysChecklists(true);
   };
 
@@ -343,13 +342,6 @@ const CafeChecklistForm = () => {
       : "";
 
   const getColorClasses = (color) => ({
-    green: {
-      bg: "bg-green-50",
-      border: "border-green-200",
-      text: "text-green-700",
-      button: "bg-green-600 hover:bg-green-700",
-      tab: "bg-green-100 text-green-700",
-    },
     blue: {
       bg: "bg-blue-50",
       border: "border-blue-200",
@@ -357,18 +349,25 @@ const CafeChecklistForm = () => {
       button: "bg-blue-600 hover:bg-blue-700",
       tab: "bg-blue-100 text-blue-700",
     },
-    red: {
-      bg: "bg-red-50",
-      border: "border-red-200",
-      text: "text-red-700",
-      button: "bg-red-600 hover:bg-red-700",
-      tab: "bg-red-100 text-red-700",
+    green: {
+      bg: "bg-green-50",
+      border: "border-green-200",
+      text: "text-green-700",
+      button: "bg-green-600 hover:bg-green-700",
+      tab: "bg-green-100 text-green-700",
+    },
+    purple: {
+      bg: "bg-purple-50",
+      border: "border-purple-200",
+      text: "text-purple-700",
+      button: "bg-purple-600 hover:bg-purple-700",
+      tab: "bg-purple-100 text-purple-700",
     },
   }[color] || {});
 
   // Load data on component mount
   useEffect(() => {
-    console.log("Component mounted, loading checklists...");
+    console.log("Marshal component mounted, loading checklists...");
     loadTodaysChecklists();
   }, [loadTodaysChecklists]);
 
@@ -393,10 +392,10 @@ const CafeChecklistForm = () => {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold text-gray-900 flex items-center">
-                <Coffee className="w-6 h-6 mr-3 text-amber-600" />
-                Cafe Checklists
+                <Shield className="w-6 h-6 mr-3 text-blue-600" />
+                Marshal Checklists
               </h1>
-              <p className="text-gray-600 mt-1">Daily operational checklists for cafe management</p>
+              <p className="text-gray-600 mt-1">Daily operational checklists for marshal duties and security</p>
             </div>
             
             <div className="flex items-center space-x-4">
@@ -447,7 +446,7 @@ const CafeChecklistForm = () => {
         {initializing && (
           <div className="mx-6 mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg flex items-center">
             <RefreshCw className="w-5 h-5 animate-spin text-blue-600 mr-2 flex-shrink-0" />
-            <span className="text-blue-700">Initializing today's checklist...</span>
+            <span className="text-blue-700">Initializing today's marshal checklist...</span>
           </div>
         )}
 
@@ -484,7 +483,7 @@ const CafeChecklistForm = () => {
           {loading && !refreshing ? (
             <div className="flex items-center justify-center py-8">
               <RefreshCw className="w-6 h-6 animate-spin mr-3" />
-              <span>Loading checklist...</span>
+              <span>Loading marshal checklist...</span>
             </div>
           ) : (
             Object.entries(checklists).map(([key, checklist]) => {
@@ -589,4 +588,4 @@ const CafeChecklistForm = () => {
   );
 };
 
-export default CafeChecklistForm;
+export default MarshalChecklistForm;

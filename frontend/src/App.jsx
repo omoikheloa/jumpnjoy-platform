@@ -15,6 +15,7 @@ import IncidentList from './components/forms/IncidentList';
 import SafetyCheckForm from './components/forms/SafetyCheckForm';
 import MaintenanceForm from './components/forms/MaintenanceForm';
 import ShiftForm from './components/forms/ShiftForm';
+import MarshalChecklistForm from './components/forms/MarshalChecklistForm';
 
 // Component to handle the root route redirection logic
 function RootRedirect({ user, isAdmin, onLogin }) {
@@ -108,7 +109,7 @@ function App() {
         <Route
           path="/employee"
           element={
-            <ProtectedRoute user={user} allowedRoles={['admin', 'manager', 'cafe']}>
+            <ProtectedRoute user={user} allowedRoles={['owner', 'cafe', 'party_host', 'marshal', 'reception']}>
               <DashboardLayout user={user} onLogout={handleLogout} />
             </ProtectedRoute>
           }
@@ -121,20 +122,20 @@ function App() {
           <Route 
             path="cafe" 
             element={
-              <ProtectedRoute user={user} allowedRoles={['admin', 'manager', 'cafe']}>
+              <ProtectedRoute user={user} allowedRoles={['owner', 'manager', 'cafe', 'party_host', 'marshal', 'reception']}>
                 <CafeChecklistForm />
               </ProtectedRoute>
             } 
           />
 
-          {/* Maintenance Log */}
-          <Route
-            path="maintenance"
+          {/* Marshal Checklists */}
+          <Route 
+            path="marshal" 
             element={
               <ProtectedRoute user={user} allowedRoles={['admin', 'manager', 'cafe']}>
-                <MaintenanceForm />
+                <MarshalChecklistForm />
               </ProtectedRoute>
-            }
+            } 
           />
 
           {/* Safety Inspection */}
@@ -167,7 +168,7 @@ function App() {
           <Route
             path="incidents/:id"
             element={
-              <ProtectedRoute user={user} allowedRoles={['admin', 'manager', 'cafe']}>
+              <ProtectedRoute user={user} allowedRoles={['owner', 'manager', 'cafe']}>
                 <IncidentReportForm />
               </ProtectedRoute>
             }
@@ -214,7 +215,7 @@ function App() {
 
         {/* Legacy /forms routes - redirect to /employee */}
         <Route path="/forms/cafe" element={<Navigate to="/employee/cafe" replace />} />
-        <Route path="/forms/maintenance" element={<Navigate to="/employee/maintenance" replace />} />
+        <Route path="/forms/marshal" element={<Navigate to="/employee/marshal" replace />} />
         <Route path="/forms/safety" element={<Navigate to="/employee/safety" replace />} />
         <Route path="/forms/incident" element={<Navigate to="/employee/incidents" replace />} />
         <Route path="/forms/shift" element={<Navigate to="/employee/shift" replace />} />

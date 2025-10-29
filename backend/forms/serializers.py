@@ -2,11 +2,7 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model, authenticate
 from django.contrib.auth.hashers import make_password
-from .models import (
-    SafetyCheck, IncidentReport, StaffShift, CleaningLog, 
-    MaintenanceLog, DailyStats, CafeChecklist, StaffAppraisal,
-    CustomerSatisfactionSurvey, BusinessTarget, DailyInspection, RemedialAction, Waiver, WaiverSession
-)
+from .models import *
 
 User = get_user_model()
 
@@ -360,6 +356,26 @@ class CafeChecklistSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = CafeChecklist
+        fields = [
+            'id', 'date', 'checklist_type', 'checklist_type_display', 'item_id',
+            'item_name', 'completed', 'created_by', 'created_by_name',
+            'updated_by', 'updated_by_name', 'created_at', 'updated_at'
+        ]
+        read_only_fields = [
+            'id', 'created_by', 'updated_by', 'created_by_name', 
+            'updated_by_name', 'checklist_type_display', 'created_at', 'updated_at'
+        ]
+
+# -----------------------
+# Marshal Checklist
+# -----------------------
+class MarshalChecklistSerializer(serializers.ModelSerializer):
+    created_by_name = serializers.CharField(source='created_by.username', read_only=True)
+    updated_by_name = serializers.CharField(source='updated_by.username', read_only=True)
+    checklist_type_display = serializers.CharField(source='get_checklist_type_display', read_only=True)
+    
+    class Meta:
+        model = MarshalChecklist
         fields = [
             'id', 'date', 'checklist_type', 'checklist_type_display', 'item_id',
             'item_name', 'completed', 'created_by', 'created_by_name',

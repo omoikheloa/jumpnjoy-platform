@@ -13,6 +13,7 @@ import {
   Home,
   AlertCircle,
   Coffee,
+  ToolCase,
   X,
   Menu,
 } from 'lucide-react';
@@ -209,10 +210,10 @@ const DashboardLayout = ({ user, onLogout }) => {
 
   const navigationItems = [
     { id: 'dashboard', label: 'Dashboard', icon: Home, roles: null },
-    { id: 'cafe', label: 'Cafe Management', icon: Coffee, roles: ['admin', 'manager', 'cafe'] },
-    { id: 'maintenance', label: 'Maintenance Log', icon: Settings, roles: ['admin', 'manager', 'cafe'] },
+    { id: 'cafe', label: 'Cafe Checklist', icon: Coffee, roles: ['admin', 'manager', 'cafe', 'party_host', 'marshal', 'reception'] },
+    { id: 'marshal', label: 'Marshal Checklist', icon: ToolCase, roles: ['admin', 'manager', 'cafe'] },
     { id: 'safety', label: 'Safety Inspection', icon: AlertCircle, roles: ['admin', 'manager', 'cafe'] },
-    { id: 'incidents', label: 'Incident Reports', icon: FileText, roles: ['admin', 'manager', 'cafe'] },
+    { id: 'incidents', label: 'Incident Reports', icon: FileText, roles: ['owner', 'manager', 'cafe'] },
     { id: 'scheduling', label: 'Shift Management', icon: Calendar, roles: ['admin', 'manager','cafe'] },
     { id: 'waivers', label: 'Waiver Dashboard', icon: FileText, roles: ['admin', 'manager', 'cafe'] },
   ];
@@ -225,8 +226,8 @@ const DashboardLayout = ({ user, onLogout }) => {
       case 'cafe':
         navigate('/employee/cafe');
         break;
-      case 'maintenance':
-        navigate('/employee/maintenance');
+      case 'marshal':
+        navigate('/employee/marshal');
         break;
       case 'safety':
         navigate('/employee/safety');
@@ -254,6 +255,8 @@ const DashboardLayout = ({ user, onLogout }) => {
       setActiveSection('dashboard');
     } else if (path.includes('/cafe')) {
       setActiveSection('cafe');
+    } else if (path.includes('/marshal')) {
+      setActiveSection('marshal');
     } else if (path.includes('/maintenance')) {
       setActiveSection('maintenance');
     } else if (path.includes('/safety')) {

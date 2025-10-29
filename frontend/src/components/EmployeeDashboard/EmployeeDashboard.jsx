@@ -173,14 +173,6 @@ const EmployeeDashboard = ({ user, onLogout }) => {
       icon: Coffee
     },
     { 
-      id: 'maintenance', 
-      label: 'Maintenance Log', 
-      description: 'Log equipment maintenance activities', 
-      path: '/employee/maintenance',
-      roles: ['admin', 'manager', 'cafe'],
-      icon: Settings
-    },
-    { 
       id: 'safety-check', 
       label: 'Safety Inspection', 
       description: 'Daily safety checks for trampolines', 

@@ -4,16 +4,17 @@ import {
   CheckCircle,
   ClipboardList,
   ChevronRight,
+  Shield,
 } from 'lucide-react';
 
-const CafeChecklistGrid = ({ checklists, loading, onViewAll, embedded = false }) => {
+const MarshalChecklistGrid = ({ checklists, loading, onViewAll, embedded = false }) => {
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [dateOptions, setDateOptions] = useState([]);
 
   useEffect(() => {
     if (checklists && !loading) {
       const checklistItems = checklists?.results || checklists || [];
-      console.log('Raw checklist items:', checklistItems);
+      console.log('Raw marshal checklist items:', checklistItems);
       
       // Extract unique dates from the checklist items
       const uniqueDates = [...new Set(checklistItems
@@ -21,7 +22,7 @@ const CafeChecklistGrid = ({ checklists, loading, onViewAll, embedded = false })
         .map(item => item.date)
       )].sort().reverse();
       
-      console.log('Available dates:', uniqueDates);
+      console.log('Available marshal dates:', uniqueDates);
       setDateOptions(uniqueDates);
       
       // If current selected date is not in available dates, set to first available date
@@ -48,17 +49,17 @@ const CafeChecklistGrid = ({ checklists, loading, onViewAll, embedded = false })
 
   // Safely get checklist items
   const checklistItems = checklists?.results || checklists || [];
-  console.log('Total checklist items:', checklistItems.length);
+  console.log('Total marshal checklist items:', checklistItems.length);
   
   // Filter items for selected date
   const filteredChecklists = checklistItems.filter(item => item && item.date === selectedDate);
-  console.log(`Items for ${selectedDate}:`, filteredChecklists);
+  console.log(`Marshal items for ${selectedDate}:`, filteredChecklists);
 
-  // Group by checklist type
+  // Group by checklist type - FIXED: Use the actual display names from backend
   const groupedChecklists = filteredChecklists.reduce((groups, item) => {
     if (!item) return groups;
     
-    // Use the display type if available, otherwise use the raw type
+    // Use the display type from backend (this matches what's actually in your data)
     const type = item.checklist_type_display || item.checklist_type || 'Unknown';
     if (!groups[type]) {
       groups[type] = [];
@@ -67,26 +68,27 @@ const CafeChecklistGrid = ({ checklists, loading, onViewAll, embedded = false })
     return groups;
   }, {});
 
-  console.log('Grouped checklists:', groupedChecklists);
+  console.log('Grouped marshal checklists:', groupedChecklists);
 
+  // FIXED: Updated checklist types to match backend display names
   const checklistTypes = [
     { 
-      key: 'Closing Checklist', 
-      label: 'Closing Checklist', 
-      icon: '🌙',
-      expectedItems: ['clean_coffee_machines', 'close_till_count', 'final_temp_check', 'store_perishables', 'sweep_mop_floors', 'turn_off_appliances', 'wipe_all_surfaces', 'lock_secure_premises']
+      key: 'Pre-Shift Marshal Checklist', 
+      label: 'Pre-Shift Marshal', 
+      icon: '🛡️',
+      color: 'green'
     },
     { 
-      key: 'Midday Operations', 
-      label: 'Midday Operations', 
-      icon: '☀️',
-      expectedItems: ['check_food_temps', 'check_milk_levels']
+      key: 'Shift Operations Checklist', 
+      label: 'Shift Operations', 
+      icon: '🔍',
+      color: 'blue'
     },
     { 
-      key: 'Opening Checklist', 
-      label: 'Opening Checklist', 
-      icon: '🌅',
-      expectedItems: ['ground_coffee', 'turn_on_appliances', 'stock_straws/lids']
+      key: 'Post-Shift Marshal Checklist', 
+      label: 'Post-Shift Marshal', 
+      icon: '📋',
+      color: 'purple'
     }
   ];
 
@@ -100,9 +102,36 @@ const CafeChecklistGrid = ({ checklists, loading, onViewAll, embedded = false })
     return { status: 'Not Started', color: 'bg-gray-100 text-gray-700', progress: 0 };
   };
 
-  const getChecklistIcon = (checklistType) => {
+  const getColorClasses = (checklistType) => {
     const type = checklistTypes.find(t => t.key === checklistType);
-    return type ? type.icon : '📋';
+    const color = type?.color || 'gray';
+    
+    return {
+      blue: {
+        bg: 'bg-blue-50',
+        border: 'border-blue-200',
+        text: 'text-blue-700',
+        progress: 'bg-blue-600'
+      },
+      green: {
+        bg: 'bg-green-50',
+        border: 'border-green-200',
+        text: 'text-green-700',
+        progress: 'bg-green-600'
+      },
+      purple: {
+        bg: 'bg-purple-50',
+        border: 'border-purple-200',
+        text: 'text-purple-700',
+        progress: 'bg-purple-600'
+      },
+      gray: {
+        bg: 'bg-gray-50',
+        border: 'border-gray-200',
+        text: 'text-gray-700',
+        progress: 'bg-gray-600'
+      }
+    }[color];
   };
 
   const formatDate = (dateString) => {
@@ -137,7 +166,10 @@ const CafeChecklistGrid = ({ checklists, loading, onViewAll, embedded = false })
       {/* Header - Only show in non-embedded mode */}
       {!embedded && (
         <div className="flex items-center justify-between mb-6">
-          <h3 className="text-lg font-semibold text-gray-900">Daily Checklists</h3>
+          <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+            <Shield className="w-5 h-5 text-blue-600" />
+            Marshal Checklists
+          </h3>
           <div className="flex items-center space-x-4">
             {/* Date Selector */}
             {dateOptions.length > 0 && (
@@ -167,7 +199,8 @@ const CafeChecklistGrid = ({ checklists, loading, onViewAll, embedded = false })
       {embedded && (
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
-            Daily Checklists
+            <Shield className="w-4 h-4 text-blue-600" />
+            Marshal Checklists
           </h3>
           <ChevronRight className="w-4 h-4 text-gray-400" />
         </div>
@@ -177,13 +210,14 @@ const CafeChecklistGrid = ({ checklists, loading, onViewAll, embedded = false })
         {!hasChecklistsForDate ? (
           <div className="text-center py-8 text-gray-500">
             <ClipboardList className="w-12 h-12 text-gray-300 mx-auto mb-2" />
-            <p>No checklist items for {formatDate(selectedDate)}</p>
-            <p className="text-sm mt-1">Checklists will appear here when created</p>
+            <p>No marshal checklist items for {formatDate(selectedDate)}</p>
+            <p className="text-sm mt-1">Marshal checklists will appear here when created</p>
           </div>
         ) : (
           checklistTypes.map(({ key, label, icon }) => {
             const items = groupedChecklists[key] || [];
             const completion = getCompletionStatus(items);
+            const colors = getColorClasses(key);
             const displayItems = items.slice(0, 3); // Show only first 3 items for preview
 
             // Don't show checklist type if there are no items for it
@@ -192,7 +226,7 @@ const CafeChecklistGrid = ({ checklists, loading, onViewAll, embedded = false })
             }
 
             return (
-              <div key={key} className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+              <div key={key} className={`p-4 rounded-lg border ${colors.bg} ${colors.border}`}>
                 <div className="flex items-start justify-between">
                   <div className="flex items-start space-x-3 flex-1">
                     <div className="p-2 rounded-lg bg-white shadow-sm text-lg">
@@ -209,9 +243,7 @@ const CafeChecklistGrid = ({ checklists, loading, onViewAll, embedded = false })
                           className="h-1.5 rounded-full transition-all duration-300"
                           style={{ 
                             width: `${completion.progress}%`,
-                            backgroundColor: 
-                              completion.status === 'Completed' ? '#10B981' :
-                              completion.status === 'In Progress' ? '#F59E0B' : '#6B7280'
+                            backgroundColor: colors.progress
                           }}
                         />
                       </div>
@@ -265,11 +297,11 @@ const CafeChecklistGrid = ({ checklists, loading, onViewAll, embedded = false })
           onClick={onViewAll}
           className="w-full bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 rounded py-2 text-sm font-medium transition-colors mt-4"
         >
-          View All Checklists
+          View All Marshal Checklists
         </button>
       )}
     </div>
   );
 };
 
-export default CafeChecklistGrid;
+export default MarshalChecklistGrid;
