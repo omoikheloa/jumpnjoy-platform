@@ -1,16 +1,29 @@
+ run `npm audit fix` to fix them, or `npm audit` for details
+jump@jump-mini:~/Documents/jumpnjoy-platform-main/frontend$ npm run build
+
+> jumpnjoy-frontend@0.0.0 build /home/jump/Documents/jumpnjoy-platform-main/frontend
 > vite build
 
-sh: 1: vite: not found
+/home/jump/Documents/jumpnjoy-platform-main/frontend/node_modules/vite/bin/vite.js:2
+import { performance } from 'node:perf_hooks'
+       ^
+
+SyntaxError: Unexpected token {
+    at Module._compile (internal/modules/cjs/loader.js:723:23)
+    at Object.Module._extensions..js (internal/modules/cjs/loader.js:789:10)
+    at Module.load (internal/modules/cjs/loader.js:653:32)
+    at tryModuleLoad (internal/modules/cjs/loader.js:593:12)
+    at Function.Module._load (internal/modules/cjs/loader.js:585:3)
+    at Function.Module.runMain (internal/modules/cjs/loader.js:831:12)
+    at startup (internal/bootstrap/node.js:283:19)
+    at bootstrapNodeJSCore (internal/bootstrap/node.js:623:3)
 npm ERR! code ELIFECYCLE
-npm ERR! syscall spawn
-npm ERR! file sh
-npm ERR! errno ENOENT
+npm ERR! errno 1
 npm ERR! jumpnjoy-frontend@0.0.0 build: `vite build`
-npm ERR! spawn ENOENT
+npm ERR! Exit status 1
 npm ERR! 
 npm ERR! Failed at the jumpnjoy-frontend@0.0.0 build script.
 npm ERR! This is probably not a problem with npm. There is likely additional logging output above.
-npm WARN Local package.json exists, but node_modules missing, did you mean to install?
 
 npm ERR! A complete log of this run can be found in:
-npm ERR!     /home/jump/.npm/_logs/2025-10-29T15_10_12_368Z-debug.log
+npm ERR!     /home/jump/.npm/_logs/2025-10-29T15_13_27_369Z-debug.log
