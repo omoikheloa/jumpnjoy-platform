@@ -1,59 +1,7 @@
-(venv) jump@jump-mini:~/Documents/jumpnjoy-platform-main/backend$ python manage.py migrate
-Traceback (most recent call last):
-  File "manage.py", line 22, in <module>
-    main()
-  File "manage.py", line 18, in main
-    execute_from_command_line(sys.argv)
-  File "/home/jump/Documents/jumpnjoy-platform-main/venv/lib/python3.8/site-packages/django/core/management/__init__.py", line 442, in execute_from_command_line
-    utility.execute()
-  File "/home/jump/Documents/jumpnjoy-platform-main/venv/lib/python3.8/site-packages/django/core/management/__init__.py", line 436, in execute
-    self.fetch_command(subcommand).run_from_argv(self.argv)
-  File "/home/jump/Documents/jumpnjoy-platform-main/venv/lib/python3.8/site-packages/django/core/management/base.py", line 412, in run_from_argv
-    self.execute(*args, **cmd_options)
-  File "/home/jump/Documents/jumpnjoy-platform-main/venv/lib/python3.8/site-packages/django/core/management/base.py", line 458, in execute
-    output = self.handle(*args, **options)
-  File "/home/jump/Documents/jumpnjoy-platform-main/venv/lib/python3.8/site-packages/django/core/management/base.py", line 106, in wrapper
-    res = handle_func(*args, **kwargs)
-  File "/home/jump/Documents/jumpnjoy-platform-main/venv/lib/python3.8/site-packages/django/core/management/commands/migrate.py", line 100, in handle
-    self.check(databases=[database])
-  File "/home/jump/Documents/jumpnjoy-platform-main/venv/lib/python3.8/site-packages/django/core/management/base.py", line 485, in check
-    all_issues = checks.run_checks(
-  File "/home/jump/Documents/jumpnjoy-platform-main/venv/lib/python3.8/site-packages/django/core/checks/registry.py", line 88, in run_checks
-    new_errors = check(app_configs=app_configs, databases=databases)
-  File "/home/jump/Documents/jumpnjoy-platform-main/venv/lib/python3.8/site-packages/django/core/checks/urls.py", line 42, in check_url_namespaces_unique
-    all_namespaces = _load_all_namespaces(resolver)
-  File "/home/jump/Documents/jumpnjoy-platform-main/venv/lib/python3.8/site-packages/django/core/checks/urls.py", line 61, in _load_all_namespaces
-    url_patterns = getattr(resolver, "url_patterns", [])
-  File "/home/jump/Documents/jumpnjoy-platform-main/venv/lib/python3.8/site-packages/django/utils/functional.py", line 57, in __get__
-    res = instance.__dict__[self.name] = self.func(instance)
-  File "/home/jump/Documents/jumpnjoy-platform-main/venv/lib/python3.8/site-packages/django/urls/resolvers.py", line 715, in url_patterns
-    patterns = getattr(self.urlconf_module, "urlpatterns", self.urlconf_module)
-  File "/home/jump/Documents/jumpnjoy-platform-main/venv/lib/python3.8/site-packages/django/utils/functional.py", line 57, in __get__
-    res = instance.__dict__[self.name] = self.func(instance)
-  File "/home/jump/Documents/jumpnjoy-platform-main/venv/lib/python3.8/site-packages/django/urls/resolvers.py", line 708, in urlconf_module
-    return import_module(self.urlconf_name)
-  File "/usr/lib/python3.8/importlib/__init__.py", line 127, in import_module
-    return _bootstrap._gcd_import(name[level:], package, level)
-  File "<frozen importlib._bootstrap>", line 1014, in _gcd_import
-  File "<frozen importlib._bootstrap>", line 991, in _find_and_load
-  File "<frozen importlib._bootstrap>", line 975, in _find_and_load_unlocked
-  File "<frozen importlib._bootstrap>", line 671, in _load_unlocked
-  File "<frozen importlib._bootstrap_external>", line 848, in exec_module
-  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
-  File "/home/jump/Documents/jumpnjoy-platform-main/backend/jumpnjoy/urls.py", line 22, in <module>
-    path('api/', include('forms.urls')),
-  File "/home/jump/Documents/jumpnjoy-platform-main/venv/lib/python3.8/site-packages/django/urls/conf.py", line 38, in include
-    urlconf_module = import_module(urlconf_module)
-  File "/usr/lib/python3.8/importlib/__init__.py", line 127, in import_module
-    return _bootstrap._gcd_import(name[level:], package, level)
-  File "<frozen importlib._bootstrap>", line 1014, in _gcd_import
-  File "<frozen importlib._bootstrap>", line 991, in _find_and_load
-  File "<frozen importlib._bootstrap>", line 975, in _find_and_load_unlocked
-  File "<frozen importlib._bootstrap>", line 671, in _load_unlocked
-  File "<frozen importlib._bootstrap_external>", line 848, in exec_module
-  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
-  File "/home/jump/Documents/jumpnjoy-platform-main/backend/forms/urls.py", line 3, in <module>
-    from . import views
-  File "/home/jump/Documents/jumpnjoy-platform-main/backend/forms/views.py", line 16, in <module>
-    from reportlab.lib.pagesizes import A4
-ModuleNotFoundError: No module named 'reportlab'
+jump@jump-mini:~$ ip link show
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN mode DEFAULT group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+2: enp3s0f0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc mq state UP mode DEFAULT group default qlen 1000
+    link/ether a8:60:b6:22:75:76 brd ff:ff:ff:ff:ff:ff
+3: wlp2s0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP mode DORMANT group default qlen 1000
+    link/ether 6c:19:c0:e7:0d:ac brd ff:ff:ff:ff:ff:ff
