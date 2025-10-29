@@ -1,10 +1,12 @@
-network:
-  version: 2
-  ethernets:
-    enp3s0f0:
-      dhcp4: no
-      addresses:
-        - 192.168.1.100/24
-      gateway4: 192.168.1.1
-      nameservers:
-        addresses: [8.8.8.8, 1.1.1.1]
+[Unit]
+Description=Gunicorn daemon for Django project
+After=network.target
+
+[Service]
+User=your_username
+Group=www-data
+WorkingDirectory=/home/your_username/myapp/yourrepo/backend
+ExecStart=/home/your_username/myapp/yourrepo/backend/venv/bin/gunicorn --workers 3 --bind unix:/home/your_username/myapp/yourrepo/backend.sock yourproject.wsgi:application
+
+[Install]
+WantedBy=multi-user.target
