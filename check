@@ -1,17 +1,16 @@
-server {
-    listen 80;
-    server_name _;
+> vite build
 
-    location /static/ {
-        alias /home/your_username/myapp/yourrepo/backend/static/;
-    }
+sh: 1: vite: not found
+npm ERR! code ELIFECYCLE
+npm ERR! syscall spawn
+npm ERR! file sh
+npm ERR! errno ENOENT
+npm ERR! jumpnjoy-frontend@0.0.0 build: `vite build`
+npm ERR! spawn ENOENT
+npm ERR! 
+npm ERR! Failed at the jumpnjoy-frontend@0.0.0 build script.
+npm ERR! This is probably not a problem with npm. There is likely additional logging output above.
+npm WARN Local package.json exists, but node_modules missing, did you mean to install?
 
-    location /media/ {
-        alias /home/your_username/myapp/yourrepo/backend/media/;
-    }
-
-    location / {
-        include proxy_params;
-        proxy_pass http://unix:/home/your_username/myapp/yourrepo/backend.sock;
-    }
-}
+npm ERR! A complete log of this run can be found in:
+npm ERR!     /home/jump/.npm/_logs/2025-10-29T15_10_12_368Z-debug.log
