@@ -1,5 +1,27 @@
-✓ built in 10.98s
-⚙ Applying Django migrations & static collection...
+Traceback (most recent call last):
+  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/db/backends/base/base.py", line 289, in ensure_connection
+    self.connect()
+  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/utils/asyncio.py", line 26, in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/db/backends/base/base.py", line 270, in connect
+    self.connection = self.get_new_connection(conn_params)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/utils/asyncio.py", line 26, in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/db/backends/postgresql/base.py", line 275, in get_new_connection
+    connection = self.Database.connect(**conn_params)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/psycopg2/__init__.py", line 122, in connect
+    conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+psycopg2.OperationalError: connection to server at "localhost" (127.0.0.1), port 5432 failed: FATAL:  password authentication failed for user "jumpnjoy_user"
+connection to server at "localhost" (127.0.0.1), port 5432 failed: FATAL:  password authentication failed for user "jumpnjoy_user"
+
+
+The above exception was the direct cause of the following exception:
+
 Traceback (most recent call last):
   File "/opt/jumpnjoy/backend/backend/manage.py", line 22, in <module>
     main()
@@ -17,61 +39,54 @@ Traceback (most recent call last):
   File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/core/management/base.py", line 106, in wrapper
     res = handle_func(*args, **kwargs)
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/core/management/commands/migrate.py", line 100, in handle
-    self.check(databases=[database])
-  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/core/management/base.py", line 485, in check
-    all_issues = checks.run_checks(
-                 ^^^^^^^^^^^^^^^^^^
-  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/core/checks/registry.py", line 88, in run_checks
-    new_errors = check(app_configs=app_configs, databases=databases)
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/core/checks/urls.py", line 14, in check_url_config
-    return check_resolver(resolver)
-           ^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/core/checks/urls.py", line 24, in check_resolver
-    return check_method()
+  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/core/management/commands/migrate.py", line 117, in handle
+    executor = MigrationExecutor(connection, self.migration_progress_callback)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/db/migrations/executor.py", line 18, in __init__
+    self.loader = MigrationLoader(self.connection)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/db/migrations/loader.py", line 58, in __init__
+    self.build_graph()
+  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/db/migrations/loader.py", line 235, in build_graph
+    self.applied_migrations = recorder.applied_migrations()
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/db/migrations/recorder.py", line 81, in applied_migrations
+    if self.has_table():
+       ^^^^^^^^^^^^^^^^
+  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/db/migrations/recorder.py", line 57, in has_table
+    with self.connection.cursor() as cursor:
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/utils/asyncio.py", line 26, in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/db/backends/base/base.py", line 330, in cursor
+    return self._cursor()
            ^^^^^^^^^^^^^^
-  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/urls/resolvers.py", line 494, in check
-    for pattern in self.url_patterns:
-                   ^^^^^^^^^^^^^^^^^
-  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/utils/functional.py", line 57, in __get__
-    res = instance.__dict__[self.name] = self.func(instance)
-                                         ^^^^^^^^^^^^^^^^^^^
-  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/urls/resolvers.py", line 715, in url_patterns
-    patterns = getattr(self.urlconf_module, "urlpatterns", self.urlconf_module)
-                       ^^^^^^^^^^^^^^^^^^^
-  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/utils/functional.py", line 57, in __get__
-    res = instance.__dict__[self.name] = self.func(instance)
-                                         ^^^^^^^^^^^^^^^^^^^
-  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/urls/resolvers.py", line 708, in urlconf_module
-    return import_module(self.urlconf_name)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/usr/lib/python3.12/importlib/__init__.py", line 90, in import_module
-    return _bootstrap._gcd_import(name[level:], package, level)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "<frozen importlib._bootstrap>", line 1387, in _gcd_import
-  File "<frozen importlib._bootstrap>", line 1360, in _find_and_load
-  File "<frozen importlib._bootstrap>", line 1331, in _find_and_load_unlocked
-  File "<frozen importlib._bootstrap>", line 935, in _load_unlocked
-  File "<frozen importlib._bootstrap_external>", line 995, in exec_module
-  File "<frozen importlib._bootstrap>", line 488, in _call_with_frames_removed
-  File "/opt/jumpnjoy/backend/backend/jumpnjoy/urls.py", line 22, in <module>
-    path('api/', include('forms.urls')),
-                 ^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/urls/conf.py", line 38, in include
-    urlconf_module = import_module(urlconf_module)
-                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/usr/lib/python3.12/importlib/__init__.py", line 90, in import_module
-    return _bootstrap._gcd_import(name[level:], package, level)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "<frozen importlib._bootstrap>", line 1387, in _gcd_import
-  File "<frozen importlib._bootstrap>", line 1360, in _find_and_load
-  File "<frozen importlib._bootstrap>", line 1331, in _find_and_load_unlocked
-  File "<frozen importlib._bootstrap>", line 935, in _load_unlocked
-  File "<frozen importlib._bootstrap_external>", line 995, in exec_module
-  File "<frozen importlib._bootstrap>", line 488, in _call_with_frames_removed
-  File "/opt/jumpnjoy/backend/backend/forms/urls.py", line 3, in <module>
-    from . import views
-  File "/opt/jumpnjoy/backend/backend/forms/views.py", line 16, in <module>
-    from reportlab.lib.pagesizes import A4
-ModuleNotFoundError: No module named 'reportlab'
+  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/db/backends/base/base.py", line 306, in _cursor
+    self.ensure_connection()
+  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/utils/asyncio.py", line 26, in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/db/backends/base/base.py", line 288, in ensure_connection
+    with self.wrap_database_errors:
+  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/db/utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/db/backends/base/base.py", line 289, in ensure_connection
+    self.connect()
+  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/utils/asyncio.py", line 26, in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/db/backends/base/base.py", line 270, in connect
+    self.connection = self.get_new_connection(conn_params)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/utils/asyncio.py", line 26, in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/db/backends/postgresql/base.py", line 275, in get_new_connection
+    connection = self.Database.connect(**conn_params)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/psycopg2/__init__.py", line 122, in connect
+    conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+django.db.utils.OperationalError: connection to server at "localhost" (127.0.0.1), port 5432 failed: FATAL:  password authentication failed for user "jumpnjoy_user"
+connection to server at "localhost" (127.0.0.1), port 5432 failed: FATAL:  password authentication failed for user "jumpnjoy_user"
