@@ -1,184 +1,5 @@
-jump@jump-Latitude-3550:~/Desktop$ ./deploy_jumpnjoy_mint.sh 
-📦 Updating system...
-[sudo] password for jump:        
-Ign:1 https://dl.google.com/linux/chrome/deb stable InRelease
-Ign:2 http://packages.linuxmint.com zara InRelease                             
-Ign:3 http://archive.ubuntu.com/ubuntu noble InRelease                         
-Ign:4 http://security.ubuntu.com/ubuntu noble-security InRelease         
-Ign:5 http://archive.ubuntu.com/ubuntu noble-updates InRelease
-Ign:6 http://archive.ubuntu.com/ubuntu noble-backports InRelease
-Ign:1 https://dl.google.com/linux/chrome/deb stable InRelease
-Ign:2 http://packages.linuxmint.com zara InRelease
-Ign:3 http://archive.ubuntu.com/ubuntu noble InRelease
-Ign:4 http://security.ubuntu.com/ubuntu noble-security InRelease
-Ign:5 http://archive.ubuntu.com/ubuntu noble-updates InRelease
-Ign:6 http://archive.ubuntu.com/ubuntu noble-backports InRelease
-Ign:3 http://archive.ubuntu.com/ubuntu noble InRelease
-Ign:1 https://dl.google.com/linux/chrome/deb stable InRelease
-Ign:2 http://packages.linuxmint.com zara InRelease
-Ign:4 http://security.ubuntu.com/ubuntu noble-security InRelease
-Ign:5 http://archive.ubuntu.com/ubuntu noble-updates InRelease
-Ign:6 http://archive.ubuntu.com/ubuntu noble-backports InRelease
-Err:3 http://archive.ubuntu.com/ubuntu noble InRelease
-  Could not resolve ‘archive.ubuntu.com’
-Err:4 http://security.ubuntu.com/ubuntu noble-security InRelease
-  Could not resolve ‘security.ubuntu.com’
-Err:2 http://packages.linuxmint.com zara InRelease
-  Could not resolve ‘packages.linuxmint.com’
-Err:1 https://dl.google.com/linux/chrome/deb stable InRelease
-  Could not resolve ‘dl.google.com’
-Err:5 http://archive.ubuntu.com/ubuntu noble-updates InRelease
-  Could not resolve ‘archive.ubuntu.com’
-Err:6 http://archive.ubuntu.com/ubuntu noble-backports InRelease
-  Could not resolve ‘archive.ubuntu.com’
-Reading package lists... Done
-Building dependency tree... Done
-Reading state information... Done
-All packages are up-to-date.
-W: Failed to fetch https://dl.google.com/linux/chrome/deb/dists/stable/InRelease  Could not resolve ‘dl.google.com’
-W: Failed to fetch http://packages.linuxmint.com/dists/zara/InRelease  Could not resolve ‘packages.linuxmint.com’
-W: Failed to fetch http://archive.ubuntu.com/ubuntu/dists/noble/InRelease  Could not resolve ‘archive.ubuntu.com’
-W: Failed to fetch http://archive.ubuntu.com/ubuntu/dists/noble-updates/InRelease  Could not resolve ‘archive.ubuntu.com’
-W: Failed to fetch http://archive.ubuntu.com/ubuntu/dists/noble-backports/InRelease  Could not resolve ‘archive.ubuntu.com’
-W: Failed to fetch http://security.ubuntu.com/ubuntu/dists/noble-security/InRelease  Could not resolve ‘security.ubuntu.com’
-W: Some index files failed to download. They have been ignored, or old ones used instead.
-Reading package lists... Done
-Building dependency tree... Done
-Reading state information... Done
-Calculating upgrade... Done
-0 to upgrade, 0 to newly install, 0 to remove and 0 not to upgrade.
-📦 Installing core services...
-Reading package lists... Done
-Building dependency tree... Done
-Reading state information... Done
-python3 is already the newest version (3.12.3-0ubuntu2.1).
-python3-venv is already the newest version (3.12.3-0ubuntu2.1).
-python3-pip is already the newest version (24.0+dfsg-1ubuntu1.3).
-build-essential is already the newest version (12.10ubuntu1).
-libpq-dev is already the newest version (16.10-0ubuntu0.24.04.1).
-postgresql is already the newest version (16+257build1.1).
-postgresql-contrib is already the newest version (16+257build1.1).
-nginx is already the newest version (1.24.0-2ubuntu7.5).
-ufw is already the newest version (0.36.2-6).
-curl is already the newest version (8.5.0-2ubuntu10.6).
-0 to upgrade, 0 to newly install, 0 to remove and 0 not to upgrade.
-🔍 Checking Node.js version...
-ℹ Node.js present: v18.19.1
-📁 Creating directories...
-🐘 Configuring PostgreSQL...
-DO
-ERROR:  database "jumpnjoy_db" already exists
-GRANT
-🐍 Setting up Python virtualenv...
-Requirement already satisfied: pip in ./venv/lib/python3.12/site-packages (25.3)
-WARNING: Retrying (Retry(total=4, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<pip._vendor.urllib3.connection.HTTPSConnection object at 0x7d317cfc8dd0>: Failed to establish a new connection: [Errno -2] Name or service not known')': /simple/pip/
-WARNING: Retrying (Retry(total=3, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<pip._vendor.urllib3.connection.HTTPSConnection object at 0x7d317c6c6870>: Failed to establish a new connection: [Errno -2] Name or service not known')': /simple/pip/
-WARNING: Retrying (Retry(total=2, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<pip._vendor.urllib3.connection.HTTPSConnection object at 0x7d317c6c6e70>: Failed to establish a new connection: [Errno -2] Name or service not known')': /simple/pip/
-WARNING: Retrying (Retry(total=1, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<pip._vendor.urllib3.connection.HTTPSConnection object at 0x7d317c6c7080>: Failed to establish a new connection: [Errno -2] Name or service not known')': /simple/pip/
-WARNING: Retrying (Retry(total=0, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<pip._vendor.urllib3.connection.HTTPSConnection object at 0x7d317c6c7230>: Failed to establish a new connection: [Errno -2] Name or service not known')': /simple/pip/
-Requirement already satisfied: wheel in ./venv/lib/python3.12/site-packages (0.45.1)
-WARNING: Retrying (Retry(total=4, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<pip._vendor.urllib3.connection.HTTPSConnection object at 0x7d317c7174d0>: Failed to establish a new connection: [Errno -2] Name or service not known')': /simple/wheel/
-WARNING: Retrying (Retry(total=3, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<pip._vendor.urllib3.connection.HTTPSConnection object at 0x7d317c7176b0>: Failed to establish a new connection: [Errno -2] Name or service not known')': /simple/wheel/
-WARNING: Retrying (Retry(total=2, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<pip._vendor.urllib3.connection.HTTPSConnection object at 0x7d317c7178c0>: Failed to establish a new connection: [Errno -2] Name or service not known')': /simple/wheel/
-WARNING: Retrying (Retry(total=1, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<pip._vendor.urllib3.connection.HTTPSConnection object at 0x7d317c717aa0>: Failed to establish a new connection: [Errno -2] Name or service not known')': /simple/wheel/
-WARNING: Retrying (Retry(total=0, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<pip._vendor.urllib3.connection.HTTPSConnection object at 0x7d317c717c80>: Failed to establish a new connection: [Errno -2] Name or service not known')': /simple/wheel/
-Requirement already satisfied: setuptools in ./venv/lib/python3.12/site-packages (80.9.0)
-WARNING: Retrying (Retry(total=4, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<pip._vendor.urllib3.connection.HTTPSConnection object at 0x7d317c72c440>: Failed to establish a new connection: [Errno -2] Name or service not known')': /simple/setuptools/
-WARNING: Retrying (Retry(total=3, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<pip._vendor.urllib3.connection.HTTPSConnection object at 0x7d317c72c590>: Failed to establish a new connection: [Errno -2] Name or service not known')': /simple/setuptools/
-WARNING: Retrying (Retry(total=2, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<pip._vendor.urllib3.connection.HTTPSConnection object at 0x7d317c72c860>: Failed to establish a new connection: [Errno -2] Name or service not known')': /simple/setuptools/
-WARNING: Retrying (Retry(total=1, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<pip._vendor.urllib3.connection.HTTPSConnection object at 0x7d317c72ca70>: Failed to establish a new connection: [Errno -2] Name or service not known')': /simple/setuptools/
-WARNING: Retrying (Retry(total=0, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<pip._vendor.urllib3.connection.HTTPSConnection object at 0x7d317c717380>: Failed to establish a new connection: [Errno -2] Name or service not known')': /simple/setuptools/
-Requirement already satisfied: asgiref==3.9.1 in ./venv/lib/python3.12/site-packages (from -r /opt/jumpnjoy/backend/backend/requirements.txt (line 1)) (3.9.1)
-Requirement already satisfied: Django==4.2.7 in ./venv/lib/python3.12/site-packages (from -r /opt/jumpnjoy/backend/backend/requirements.txt (line 2)) (4.2.7)
-Requirement already satisfied: django-cors-headers==4.3.1 in ./venv/lib/python3.12/site-packages (from -r /opt/jumpnjoy/backend/backend/requirements.txt (line 3)) (4.3.1)
-Requirement already satisfied: djangorestframework==3.14.0 in ./venv/lib/python3.12/site-packages (from -r /opt/jumpnjoy/backend/backend/requirements.txt (line 4)) (3.14.0)
-Requirement already satisfied: gunicorn==21.2.0 in ./venv/lib/python3.12/site-packages (from -r /opt/jumpnjoy/backend/backend/requirements.txt (line 5)) (21.2.0)
-Requirement already satisfied: packaging==25.0 in ./venv/lib/python3.12/site-packages (from -r /opt/jumpnjoy/backend/backend/requirements.txt (line 6)) (25.0)
-Requirement already satisfied: pytz==2025.2 in ./venv/lib/python3.12/site-packages (from -r /opt/jumpnjoy/backend/backend/requirements.txt (line 7)) (2025.2)
-Requirement already satisfied: sqlparse==0.5.3 in ./venv/lib/python3.12/site-packages (from -r /opt/jumpnjoy/backend/backend/requirements.txt (line 8)) (0.5.3)
-Requirement already satisfied: tzdata==2025.2 in ./venv/lib/python3.12/site-packages (from -r /opt/jumpnjoy/backend/backend/requirements.txt (line 9)) (2025.2)
-Requirement already satisfied: dj-database-url==1.2.0 in ./venv/lib/python3.12/site-packages (from -r /opt/jumpnjoy/backend/backend/requirements.txt (line 10)) (1.2.0)
-Requirement already satisfied: whitenoise==6.5.0 in ./venv/lib/python3.12/site-packages (from -r /opt/jumpnjoy/backend/backend/requirements.txt (line 11)) (6.5.0)
-Requirement already satisfied: psycopg2-binary==2.9.7 in ./venv/lib/python3.12/site-packages (from -r /opt/jumpnjoy/backend/backend/requirements.txt (line 12)) (2.9.7)
-🌐 Building frontend...
-npm WARN EBADENGINE Unsupported engine {
-npm WARN EBADENGINE   package: 'react-router@7.8.0',
-npm WARN EBADENGINE   required: { node: '>=20.0.0' },
-npm WARN EBADENGINE   current: { node: 'v18.19.1', npm: '9.2.0' }
-npm WARN EBADENGINE }
-npm WARN EBADENGINE Unsupported engine {
-npm WARN EBADENGINE   package: 'react-router-dom@7.8.0',
-npm WARN EBADENGINE   required: { node: '>=20.0.0' },
-npm WARN EBADENGINE   current: { node: 'v18.19.1', npm: '9.2.0' }
-npm WARN EBADENGINE }
-npm WARN deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
-npm WARN deprecated @humanwhocodes/config-array@0.13.0: Use @eslint/config-array instead
-npm WARN deprecated rimraf@3.0.2: Rimraf versions prior to v4 are no longer supported
-npm WARN deprecated @humanwhocodes/object-schema@2.0.3: Use @eslint/object-schema instead
-npm WARN deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
-npm WARN deprecated eslint@8.57.1: This version is no longer supported. Please see https://eslint.org/version-support for other options.
-
-added 440 packages in 6s
-
-137 packages are looking for funding
-  run `npm fund` for details
-
-> jumpnjoy-frontend@0.0.0 build
-> vite build
-
-vite v5.4.19 building for production...
-✓ 3198 modules transformed.
-dist/index.html                              0.46 kB │ gzip:   0.30 kB
-dist/assets/index-ChAMLXn8.css              68.12 kB │ gzip:  10.30 kB
-dist/assets/purify.es-B6FQ9oRL.js           22.61 kB │ gzip:   8.74 kB │ map:    92.56 kB
-dist/assets/index.es-B2KR45As.js           150.50 kB │ gzip:  51.28 kB │ map:   636.29 kB
-dist/assets/html2canvas.esm-CBrSDip1.js    201.48 kB │ gzip:  47.75 kB │ map:   602.27 kB
-dist/assets/index-CUsQICJ1.js            1,253.29 kB │ gzip: 358.44 kB │ map: 4,561.42 kB
-
-(!) Some chunks are larger than 500 kB after minification. Consider:
-- Using dynamic import() to code-split the application
-- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
-- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
-✓ built in 11.15s
+✓ built in 10.98s
 ⚙ Applying Django migrations & static collection...
-Traceback (most recent call last):
-  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/core/management/base.py", line 412, in run_from_argv
-    self.execute(*args, **cmd_options)
-  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/core/management/base.py", line 458, in execute
-    output = self.handle(*args, **options)
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/core/management/base.py", line 103, in wrapper
-    saved_locale = translation.get_language()
-                   ^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/utils/translation/__init__.py", line 210, in get_language
-    return _trans.get_language()
-           ^^^^^^^^^^^^^^^^^^^
-  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/utils/translation/__init__.py", line 65, in __getattr__
-    if settings.USE_I18N:
-       ^^^^^^^^^^^^^^^^^
-  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/conf/__init__.py", line 102, in __getattr__
-    self._setup(name)
-  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/conf/__init__.py", line 89, in _setup
-    self._wrapped = Settings(settings_module)
-                    ^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/conf/__init__.py", line 217, in __init__
-    mod = importlib.import_module(self.SETTINGS_MODULE)
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/usr/lib/python3.12/importlib/__init__.py", line 90, in import_module
-    return _bootstrap._gcd_import(name[level:], package, level)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "<frozen importlib._bootstrap>", line 1387, in _gcd_import
-  File "<frozen importlib._bootstrap>", line 1360, in _find_and_load
-  File "<frozen importlib._bootstrap>", line 1331, in _find_and_load_unlocked
-  File "<frozen importlib._bootstrap>", line 935, in _load_unlocked
-  File "<frozen importlib._bootstrap_external>", line 995, in exec_module
-  File "<frozen importlib._bootstrap>", line 488, in _call_with_frames_removed
-  File "/opt/jumpnjoy/backend/backend/jumpnjoy/settings.py", line 3, in <module>
-    from dotenv import load_dotenv
-ModuleNotFoundError: No module named 'dotenv'
-
-During handling of the above exception, another exception occurred:
-
 Traceback (most recent call last):
   File "/opt/jumpnjoy/backend/backend/manage.py", line 22, in <module>
     main()
@@ -188,37 +9,43 @@ Traceback (most recent call last):
     utility.execute()
   File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/core/management/__init__.py", line 436, in execute
     self.fetch_command(subcommand).run_from_argv(self.argv)
-  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/core/management/base.py", line 425, in run_from_argv
-    connections.close_all()
-  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/utils/connection.py", line 84, in close_all
-    for conn in self.all(initialized_only=True):
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/utils/connection.py", line 76, in all
-    return [
-           ^
-  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/utils/connection.py", line 73, in __iter__
-    return iter(self.settings)
-                ^^^^^^^^^^^^^
+  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/core/management/base.py", line 412, in run_from_argv
+    self.execute(*args, **cmd_options)
+  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/core/management/base.py", line 458, in execute
+    output = self.handle(*args, **options)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/core/management/base.py", line 106, in wrapper
+    res = handle_func(*args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/core/management/commands/migrate.py", line 100, in handle
+    self.check(databases=[database])
+  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/core/management/base.py", line 485, in check
+    all_issues = checks.run_checks(
+                 ^^^^^^^^^^^^^^^^^^
+  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/core/checks/registry.py", line 88, in run_checks
+    new_errors = check(app_configs=app_configs, databases=databases)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/core/checks/urls.py", line 14, in check_url_config
+    return check_resolver(resolver)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/core/checks/urls.py", line 24, in check_resolver
+    return check_method()
+           ^^^^^^^^^^^^^^
+  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/urls/resolvers.py", line 494, in check
+    for pattern in self.url_patterns:
+                   ^^^^^^^^^^^^^^^^^
   File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/utils/functional.py", line 57, in __get__
     res = instance.__dict__[self.name] = self.func(instance)
                                          ^^^^^^^^^^^^^^^^^^^
-  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/utils/connection.py", line 45, in settings
-    self._settings = self.configure_settings(self._settings)
-                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/db/utils.py", line 148, in configure_settings
-    databases = super().configure_settings(databases)
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/utils/connection.py", line 50, in configure_settings
-    settings = getattr(django_settings, self.settings_name)
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/conf/__init__.py", line 102, in __getattr__
-    self._setup(name)
-  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/conf/__init__.py", line 89, in _setup
-    self._wrapped = Settings(settings_module)
-                    ^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/conf/__init__.py", line 217, in __init__
-    mod = importlib.import_module(self.SETTINGS_MODULE)
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/urls/resolvers.py", line 715, in url_patterns
+    patterns = getattr(self.urlconf_module, "urlpatterns", self.urlconf_module)
+                       ^^^^^^^^^^^^^^^^^^^
+  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/utils/functional.py", line 57, in __get__
+    res = instance.__dict__[self.name] = self.func(instance)
+                                         ^^^^^^^^^^^^^^^^^^^
+  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/urls/resolvers.py", line 708, in urlconf_module
+    return import_module(self.urlconf_name)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
   File "/usr/lib/python3.12/importlib/__init__.py", line 90, in import_module
     return _bootstrap._gcd_import(name[level:], package, level)
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -228,6 +55,23 @@ Traceback (most recent call last):
   File "<frozen importlib._bootstrap>", line 935, in _load_unlocked
   File "<frozen importlib._bootstrap_external>", line 995, in exec_module
   File "<frozen importlib._bootstrap>", line 488, in _call_with_frames_removed
-  File "/opt/jumpnjoy/backend/backend/jumpnjoy/settings.py", line 3, in <module>
-    from dotenv import load_dotenv
-ModuleNotFoundError: No module named 'dotenv'
+  File "/opt/jumpnjoy/backend/backend/jumpnjoy/urls.py", line 22, in <module>
+    path('api/', include('forms.urls')),
+                 ^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/urls/conf.py", line 38, in include
+    urlconf_module = import_module(urlconf_module)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/importlib/__init__.py", line 90, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap>", line 1387, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1360, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1331, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 935, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 995, in exec_module
+  File "<frozen importlib._bootstrap>", line 488, in _call_with_frames_removed
+  File "/opt/jumpnjoy/backend/backend/forms/urls.py", line 3, in <module>
+    from . import views
+  File "/opt/jumpnjoy/backend/backend/forms/views.py", line 16, in <module>
+    from reportlab.lib.pagesizes import A4
+ModuleNotFoundError: No module named 'reportlab'
