@@ -1,23 +1,10 @@
-Traceback (most recent call last):
-  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/db/backends/base/base.py", line 289, in ensure_connection
-    self.connect()
-  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/utils/asyncio.py", line 26, in inner
-    return func(*args, **kwargs)
-           ^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/db/backends/base/base.py", line 270, in connect
-    self.connection = self.get_new_connection(conn_params)
-                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/utils/asyncio.py", line 26, in inner
-    return func(*args, **kwargs)
-           ^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/db/backends/postgresql/base.py", line 275, in get_new_connection
-    connection = self.Database.connect(**conn_params)
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/psycopg2/__init__.py", line 122, in connect
-    conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-psycopg2.OperationalError: connection to server at "localhost" (127.0.0.1), port 5432 failed: FATAL:  password authentication failed for user "jumpnjoy_user"
-connection to server at "localhost" (127.0.0.1), port 5432 failed: FATAL:  password authentication failed for user "jumpnjoy_user"
+  Applying forms.0011_alter_waiver_options_and_more...Traceback (most recent call last):
+  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/db/backends/utils.py", line 87, in _execute
+    return self.cursor.execute(sql)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+psycopg2.errors.CannotCoerce: cannot cast type bigint to uuid
+LINE 1: ... "forms_waiver" ALTER COLUMN "id" TYPE uuid USING "id"::uuid
+                                                                 ^
 
 
 The above exception was the direct cause of the following exception:
@@ -39,54 +26,46 @@ Traceback (most recent call last):
   File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/core/management/base.py", line 106, in wrapper
     res = handle_func(*args, **kwargs)
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/core/management/commands/migrate.py", line 117, in handle
-    executor = MigrationExecutor(connection, self.migration_progress_callback)
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/db/migrations/executor.py", line 18, in __init__
-    self.loader = MigrationLoader(self.connection)
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/db/migrations/loader.py", line 58, in __init__
-    self.build_graph()
-  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/db/migrations/loader.py", line 235, in build_graph
-    self.applied_migrations = recorder.applied_migrations()
-                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/db/migrations/recorder.py", line 81, in applied_migrations
-    if self.has_table():
-       ^^^^^^^^^^^^^^^^
-  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/db/migrations/recorder.py", line 57, in has_table
-    with self.connection.cursor() as cursor:
-         ^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/utils/asyncio.py", line 26, in inner
-    return func(*args, **kwargs)
-           ^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/db/backends/base/base.py", line 330, in cursor
-    return self._cursor()
-           ^^^^^^^^^^^^^^
-  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/db/backends/base/base.py", line 306, in _cursor
-    self.ensure_connection()
-  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/utils/asyncio.py", line 26, in inner
-    return func(*args, **kwargs)
-           ^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/db/backends/base/base.py", line 288, in ensure_connection
-    with self.wrap_database_errors:
+  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/core/management/commands/migrate.py", line 356, in handle
+    post_migrate_state = executor.migrate(
+                         ^^^^^^^^^^^^^^^^^
+  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/db/migrations/executor.py", line 135, in migrate
+    state = self._migrate_all_forwards(
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/db/migrations/executor.py", line 167, in _migrate_all_forwards
+    state = self.apply_migration(
+            ^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/db/migrations/executor.py", line 252, in apply_migration
+    state = migration.apply(state, schema_editor)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/db/migrations/migration.py", line 132, in apply
+    operation.database_forwards(
+  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/db/migrations/operations/fields.py", line 235, in database_forwards
+    schema_editor.alter_field(from_model, from_field, to_field)
+  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/db/backends/base/schema.py", line 830, in alter_field
+    self._alter_field(
+  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/db/backends/postgresql/schema.py", line 288, in _alter_field
+    super()._alter_field(
+  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/db/backends/base/schema.py", line 1055, in _alter_field
+    self.execute(
+  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/db/backends/postgresql/schema.py", line 48, in execute
+    return super().execute(sql, None)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/db/backends/base/schema.py", line 201, in execute
+    cursor.execute(sql, params)
+  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/db/backends/utils.py", line 67, in execute
+    return self._execute_with_wrappers(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/db/backends/utils.py", line 80, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/db/backends/utils.py", line 84, in _execute
+    with self.db.wrap_database_errors:
   File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/db/utils.py", line 91, in __exit__
     raise dj_exc_value.with_traceback(traceback) from exc_value
-  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/db/backends/base/base.py", line 289, in ensure_connection
-    self.connect()
-  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/utils/asyncio.py", line 26, in inner
-    return func(*args, **kwargs)
-           ^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/db/backends/base/base.py", line 270, in connect
-    self.connection = self.get_new_connection(conn_params)
-                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/utils/asyncio.py", line 26, in inner
-    return func(*args, **kwargs)
-           ^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/db/backends/postgresql/base.py", line 275, in get_new_connection
-    connection = self.Database.connect(**conn_params)
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/psycopg2/__init__.py", line 122, in connect
-    conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-django.db.utils.OperationalError: connection to server at "localhost" (127.0.0.1), port 5432 failed: FATAL:  password authentication failed for user "jumpnjoy_user"
-connection to server at "localhost" (127.0.0.1), port 5432 failed: FATAL:  password authentication failed for user "jumpnjoy_user"
+  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/db/backends/utils.py", line 87, in _execute
+    return self.cursor.execute(sql)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+django.db.utils.ProgrammingError: cannot cast type bigint to uuid
+LINE 1: ... "forms_waiver" ALTER COLUMN "id" TYPE uuid USING "id"::uuid
+                                                                 ^
