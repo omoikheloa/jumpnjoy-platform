@@ -1,71 +1,23 @@
-(venv) jump@jump-Latitude-3550:/opt/jumpnjoy/backend/backend$ python manage.py migrate
-Operations to perform:
-  Apply all migrations: admin, auth, authtoken, contenttypes, forms, sessions
-Running migrations:
-  Applying forms.0011_alter_waiver_options_and_more...Traceback (most recent call last):
-  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/db/backends/utils.py", line 87, in _execute
-    return self.cursor.execute(sql)
-           ^^^^^^^^^^^^^^^^^^^^^^^^
-psycopg2.errors.UndefinedTable: relation "forms_waiver" does not exist
+###############################################
+# Django Security
+###############################################
+DJANGO_SECRET_KEY=secret_key###
+DJANGO_DEBUG=False
 
+# Comma-separated allowed hosts
+# include LAN IP and any hostname you assign
+DJANGO_ALLOWED_HOSTS=192.168.1.20,jumpnjoy.local,localhost
 
-The above exception was the direct cause of the following exception:
+###############################################
+# PostgreSQL Database
+###############################################
+DB_NAME=
+DB_USER=
+DB_PASS=Jumpnjoy2025
+DB_HOST=localhost
+DB_PORT=5432
 
-Traceback (most recent call last):
-  File "/opt/jumpnjoy/backend/backend/manage.py", line 22, in <module>
-    main()
-  File "/opt/jumpnjoy/backend/backend/manage.py", line 18, in main
-    execute_from_command_line(sys.argv)
-  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/core/management/__init__.py", line 442, in execute_from_command_line
-    utility.execute()
-  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/core/management/__init__.py", line 436, in execute
-    self.fetch_command(subcommand).run_from_argv(self.argv)
-  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/core/management/base.py", line 412, in run_from_argv
-    self.execute(*args, **cmd_options)
-  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/core/management/base.py", line 458, in execute
-    output = self.handle(*args, **options)
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/core/management/base.py", line 106, in wrapper
-    res = handle_func(*args, **kwargs)
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/core/management/commands/migrate.py", line 356, in handle
-    post_migrate_state = executor.migrate(
-                         ^^^^^^^^^^^^^^^^^
-  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/db/migrations/executor.py", line 135, in migrate
-    state = self._migrate_all_forwards(
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/db/migrations/executor.py", line 167, in _migrate_all_forwards
-    state = self.apply_migration(
-            ^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/db/migrations/executor.py", line 252, in apply_migration
-    state = migration.apply(state, schema_editor)
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/db/migrations/migration.py", line 132, in apply
-    operation.database_forwards(
-  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/db/migrations/operations/fields.py", line 303, in database_forwards
-    schema_editor.alter_field(
-  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/db/backends/base/schema.py", line 830, in alter_field
-    self._alter_field(
-  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/db/backends/postgresql/schema.py", line 288, in _alter_field
-    super()._alter_field(
-  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/db/backends/base/schema.py", line 982, in _alter_field
-    self.execute(
-  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/db/backends/postgresql/schema.py", line 48, in execute
-    return super().execute(sql, None)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/db/backends/base/schema.py", line 201, in execute
-    cursor.execute(sql, params)
-  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/db/backends/utils.py", line 67, in execute
-    return self._execute_with_wrappers(
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/db/backends/utils.py", line 80, in _execute_with_wrappers
-    return executor(sql, params, many, context)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/db/backends/utils.py", line 84, in _execute
-    with self.db.wrap_database_errors:
-  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/db/utils.py", line 91, in __exit__
-    raise dj_exc_value.with_traceback(traceback) from exc_value
-  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/db/backends/utils.py", line 87, in _execute
-    return self.cursor.execute(sql)
-           ^^^^^^^^^^^^^^^^^^^^^^^^
-django.db.utils.ProgrammingError: relation "forms_waiver" does not exist
+###############################################
+# CORS Allowed Origins (Frontend clients)
+###############################################
+CORS_ALLOWED_ORIGINS=http://192.168.1.20,http://jumpnjoy.local
