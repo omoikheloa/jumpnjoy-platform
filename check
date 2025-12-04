@@ -1,10 +1,12 @@
+(venv) jump@jump-Latitude-3550:/opt/jumpnjoy/backend/backend$ python manage.py migrate
+Operations to perform:
+  Apply all migrations: admin, auth, authtoken, contenttypes, forms, sessions
+Running migrations:
   Applying forms.0011_alter_waiver_options_and_more...Traceback (most recent call last):
   File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/db/backends/utils.py", line 87, in _execute
     return self.cursor.execute(sql)
            ^^^^^^^^^^^^^^^^^^^^^^^^
-psycopg2.errors.CannotCoerce: cannot cast type bigint to uuid
-LINE 1: ... "forms_waiver" ALTER COLUMN "id" TYPE uuid USING "id"::uuid
-                                                                 ^
+psycopg2.errors.UndefinedTable: relation "forms_waiver" does not exist
 
 
 The above exception was the direct cause of the following exception:
@@ -40,13 +42,13 @@ Traceback (most recent call last):
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
   File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/db/migrations/migration.py", line 132, in apply
     operation.database_forwards(
-  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/db/migrations/operations/fields.py", line 235, in database_forwards
-    schema_editor.alter_field(from_model, from_field, to_field)
+  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/db/migrations/operations/fields.py", line 303, in database_forwards
+    schema_editor.alter_field(
   File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/db/backends/base/schema.py", line 830, in alter_field
     self._alter_field(
   File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/db/backends/postgresql/schema.py", line 288, in _alter_field
     super()._alter_field(
-  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/db/backends/base/schema.py", line 1055, in _alter_field
+  File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/db/backends/base/schema.py", line 982, in _alter_field
     self.execute(
   File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/db/backends/postgresql/schema.py", line 48, in execute
     return super().execute(sql, None)
@@ -66,6 +68,4 @@ Traceback (most recent call last):
   File "/opt/jumpnjoy/backend/backend/venv/lib/python3.12/site-packages/django/db/backends/utils.py", line 87, in _execute
     return self.cursor.execute(sql)
            ^^^^^^^^^^^^^^^^^^^^^^^^
-django.db.utils.ProgrammingError: cannot cast type bigint to uuid
-LINE 1: ... "forms_waiver" ALTER COLUMN "id" TYPE uuid USING "id"::uuid
-                                                                 ^
+django.db.utils.ProgrammingError: relation "forms_waiver" does not exist
