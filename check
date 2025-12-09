@@ -1,1 +1,23 @@
-still debugging
+###############################################
+# Django Security
+###############################################
+DJANGO_SECRET_KEY=2dec903185bbf708d6defdc987596fd6
+DJANGO_DEBUG=False
+
+# Comma-separated allowed hosts
+# include LAN IP and any hostname you assign
+DJANGO_ALLOWED_HOSTS=192.168.1.20,jumpnjoy.local,localhost
+
+###############################################
+# PostgreSQL Database
+###############################################
+DB_NAME=jumpnjoy_db
+DB_USER=jumpnjoy_user
+DB_PASS=Jumpnjoy2025
+DB_HOST=localhost
+DB_PORT=5432
+
+###############################################
+# CORS Allowed Origins (Frontend clients)
+###############################################
+CORS_ALLOWED_ORIGINS=http://192.168.1.20,http://jumpnjoy.local
