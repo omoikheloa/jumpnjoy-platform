@@ -1,13 +1,74 @@
-:8001/auth/login/:1  Failed to load resource: net::ERR_CONNECTION_REFUSED
-api.js:98 API Request Error: TypeError: Failed to fetch
-    at ZI.request (api.js:84:30)
-    at ZI.login (api.js:42:33)
-    at y (Login.jsx:47:41)
-    at Object.L7 (react-dom.production.min.js:54:317)
-    at M7 (react-dom.production.min.js:54:471)
-    at I7 (react-dom.production.min.js:55:35)
-    at G_ (react-dom.production.min.js:105:68)
-    at ik (react-dom.production.min.js:106:380)
-    at react-dom.production.min.js:117:104
-    at i5 (react-dom.production.min.js:273:42)
-request @ api.js:98
+server {
+    listen 80;
+    server_name 192.168.1.20;
+    
+    # Increase client body size for file uploads
+    client_max_body_size 100M;
+
+    # Frontend static files
+    location / {
+        root /opt/jumpnjoy/frontend/frontend/dist;
+        try_files $uri $uri/ /index.html;
+        
+        # Only allow GET/HEAD for static files
+        limit_except GET HEAD {
+            deny all;
+        }
+    }
+
+    # Django static files
+    location /static/ {
+        alias /opt/jumpnjoy/backend/backend/staticfiles/;
+        expires 30d;
+        add_header Cache-Control "public, immutable";
+        
+        # Only allow GET/HEAD for static files
+        limit_except GET HEAD {
+            deny all;
+        }
+    }
+
+    # Django media files (if you have any)
+    location /media/ {
+        alias /opt/jumpnjoy/backend/backend/media/;
+        
+        # Only allow GET/HEAD for media files
+        limit_except GET HEAD {
+            deny all;
+        }
+    }
+
+    # ============================================
+    # CRITICAL: Django API endpoints
+    # ============================================
+    
+    # Match ALL Django API/authentication endpoints
+    location ~ ^/(auth|api|admin|daily-inspections|remedial-actions|inspection-dashboard|incidents|dashboard|analytics|daily-stats|cafe-checklists|marshal-checklists|safety-checks|shifts|cleaning|maintenance|appraisals|waivers|waiver-sessions)/ {
+        proxy_pass http://127.0.0.1:8000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-Host $host;
+        proxy_redirect off;
+        
+        # Allow all methods
+        proxy_method POST;
+        proxy_method GET;
+        proxy_method PUT;
+        proxy_method DELETE;
+        proxy_method PATCH;
+        proxy_method OPTIONS;
+        
+        # Handle preflight requests
+        if ($request_method = 'OPTIONS') {
+            add_header 'Access-Control-Allow-Origin' '*';
+            add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS, PUT, DELETE, PATCH';
+            add_header 'Access-Control-Allow-Headers' 'DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization';
+            add_header 'Access-Control-Max-Age' 1728000;
+            add_header 'Content-Type' 'text/plain; charset=utf-8';
+            add_header 'Content-Length' 0;
+            return 204;
+        }
+    }
+}
